@@ -62,23 +62,17 @@
   },
   "$defs": {
     "knowledgePointer": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": ["format", "profile", "root"],
-      "properties": {
-        "format": {
-          "type": "string",
-          "const": "okf"
+      "description": "Enable the default knowledge bundle at knowledge/index.md, or provide an explicit markdown root path.",
+      "oneOf": [
+        {
+          "type": "boolean",
+          "const": true
         },
-        "profile": {
-          "type": "string",
-          "const": "tinycloud.app.v1"
-        },
-        "root": {
+        {
           "type": "string",
           "pattern": "^knowledge/.+\\.md$"
         }
-      }
+      ]
     },
     "permission": {
       "type": "object",

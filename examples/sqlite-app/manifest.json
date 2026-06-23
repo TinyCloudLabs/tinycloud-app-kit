@@ -3,11 +3,7 @@
   "app_id": "com.example.notes",
   "name": "Notes",
   "description": "Notes with KV documents and SQLite search metadata.",
-  "knowledge": {
-    "format": "okf",
-    "profile": "tinycloud.app.v1",
-    "root": "knowledge/index.md"
-  },
+  "knowledge": "knowledge/index.md",
   "resources": {
     "kv": [
       {

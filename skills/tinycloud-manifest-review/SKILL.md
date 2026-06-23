@@ -21,8 +21,10 @@ Prioritize:
 ## Checks
 
 - `manifest.json` validates against the v1 schema.
-- `knowledge.root` exists when declared.
+- `knowledge` is either `true` or a `knowledge/*.md` root path.
 - `knowledge/index.md` explains the app without requiring traversal.
+- Missing `defaults` is treated as `true`; explicit permissions do not duplicate
+  default app-scoped KV/SQLite grants without a reason.
 - Category files exist only for categories in use.
 - Secret files document references, consumers, and rotation, not values.
 - SQL files identify databases, tables, derived state, and mutation rules.

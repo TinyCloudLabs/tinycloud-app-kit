@@ -11,13 +11,40 @@ intent, and the optional agent-readable knowledge bundle.
   "app_id": "com.example.notes",
   "name": "Notes",
   "description": "Notes with user-owned storage.",
-  "knowledge": {
-    "format": "okf",
-    "profile": "tinycloud.app.v1",
-    "root": "knowledge/index.md"
-  }
+  "knowledge": true
 }
 ```
+
+`knowledge: true` means the app ships the default knowledge root at
+`knowledge/index.md`. Use a string when the root differs:
+
+```json
+{
+  "knowledge": "knowledge/index.md"
+}
+```
+
+## Defaults
+
+`defaults` is optional and defaults to `true`. That gives the app an app-scoped
+baseline grant in the default `applications` space:
+
+| Implicit Resource | Scope | Capabilities |
+| --- | --- | --- |
+| App KV | `<app_id>/*` | `tinycloud.kv/get`, `put`, `del`, `list`, `metadata` |
+| App SQLite | `<app_id>/*` | `tinycloud.sql/read`, `write` |
+| Capability Introspection | app session | `tinycloud.capabilities/read` |
+
+Think of these as invisible default resources. A manifest author does not need
+to request them again just to use ordinary app-scoped KV or SQLite reads/writes.
+Only add explicit permissions or resources when the app needs:
+
+- a different space
+- a path outside the default app prefix
+- non-default actions such as `tinycloud.sql/ddl`
+- human/agent documentation for a specific resource
+
+Use `defaults: false` when every permission should be explicit.
 
 ## Resource Declarations
 
@@ -59,11 +86,15 @@ name the same database path the app uses at runtime. In TinyCloud SQL, shortcut
 calls target a SQLite database named `default`; `tc.sql.execute(...)` and
 `tc.sql.db("default").execute(...)` refer to the same database.
 
+The default SQL grant covers `read` and `write`, but not schema changes. Apps
+that run migrations still need `tinycloud.sql/ddl`.
+
 ## Review Checklist
 
 - `app_id` is stable and namespace-like.
 - `description` explains what the app does, not just what it is called.
-- `knowledge.root` points at `knowledge/index.md`.
+- `knowledge` is either `true` or a `knowledge/*.md` root path.
+- The author understands what default KV/SQL capabilities already grant.
 - Secret resources describe references only.
 - Resource descriptions are specific enough for an agent to avoid guessing.
 - SQL resources that create or alter schema declare migrations and `ddl`.

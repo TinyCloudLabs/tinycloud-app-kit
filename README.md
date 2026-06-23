@@ -47,6 +47,9 @@ skills/
 - Keep capability details inline with the resources that require them.
 - Treat `manifest.json` as the install/runtime contract and `knowledge/` as the
   operational contract.
+- Use `knowledge: true` for the default `knowledge/index.md` root, or provide a
+  `knowledge/*.md` root path.
+- Document implicit default KV and SQLite resources when defaults are enabled.
 - Use `sql.db(name).migrations.apply(...)` for SQLite schema setup instead of
   running cold DDL in hot user paths.
 
@@ -55,3 +58,13 @@ skills/
 This repo is the canonical home for app package schemas and authoring assets.
 Runtime SDK and CLI implementations should consume these schemas rather than
 maintaining parallel manifest definitions.
+
+## Validation
+
+```bash
+npm run lint
+```
+
+The linter is dependency-free. It parses schema/example JSON, checks
+`knowledge` pointers, verifies example knowledge roots exist, and catches SQL
+migrations that forgot `tinycloud.sql/ddl`.

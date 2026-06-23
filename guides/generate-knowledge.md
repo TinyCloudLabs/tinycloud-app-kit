@@ -34,7 +34,9 @@ traversal cost:
 2. Emit `knowledge/index.md`.
 3. Emit category files only when relevant.
 4. Keep capability details inline with resources.
-5. Never include secret values.
-6. Preserve hand-written sections when possible.
-7. Validate frontmatter and links.
-8. Format Markdown.
+5. Include implicit default KV/SQLite resources when `defaults` is true or
+   missing, so readers know which baseline resources already exist.
+6. Never include secret values.
+7. Preserve hand-written sections when possible.
+8. Validate frontmatter and links.
+9. Format Markdown.

@@ -1,0 +1,8 @@
+{
+  "name": "tinycloud-app-kit",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "lint": "node scripts/lint.mjs"
+  }
+}
