@@ -1,0 +1,22 @@
+{
+  "manifest_version": 1,
+  "app_id": "com.example.minimal",
+  "name": "Minimal App",
+  "description": "A TinyCloud app with one app-scoped KV namespace.",
+  "knowledge": {
+    "format": "okf",
+    "profile": "tinycloud.app.v1",
+    "root": "knowledge/index.md"
+  },
+  "resources": {
+    "kv": [
+      {
+        "name": "settings",
+        "prefix": "settings/*",
+        "description": "User preferences stored as JSON documents.",
+        "capabilities": ["tinycloud.kv/get", "tinycloud.kv/put", "tinycloud.kv/list"],
+        "sensitivity": "user-data"
+      }
+    ]
+  }
+}

@@ -1,0 +1,64 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.tinycloud.xyz/app-knowledge-frontmatter/v1.json",
+  "title": "TinyCloud App Knowledge Frontmatter v1",
+  "type": "object",
+  "additionalProperties": true,
+  "required": ["type", "title"],
+  "properties": {
+    "type": {
+      "type": "string",
+      "enum": [
+        "TinyCloud App",
+        "TinyCloud Manifest",
+        "TinyCloud Resources",
+        "TinyCloud KV",
+        "TinyCloud SQL",
+        "TinyCloud DuckDB",
+        "TinyCloud Secrets",
+        "TinyCloud Operations"
+      ]
+    },
+    "title": {
+      "type": "string",
+      "minLength": 1
+    },
+    "description": {
+      "type": "string"
+    },
+    "resource": {
+      "type": "string"
+    },
+    "tags": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "timestamp": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "tinycloud": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "app": { "type": "string" },
+        "service": {
+          "type": "string",
+          "enum": ["manifest", "kv", "sql", "duckdb", "secrets", "operations"]
+        },
+        "profile": {
+          "type": "string",
+          "const": "tinycloud.app.v1"
+        },
+        "sensitivity": {
+          "type": "string",
+          "enum": ["public", "user-data", "private", "secret-reference", "derived", "ephemeral"]
+        },
+        "containsSecretValue": {
+          "type": "boolean",
+          "const": false
+        }
+      }
+    }
+  }
+}

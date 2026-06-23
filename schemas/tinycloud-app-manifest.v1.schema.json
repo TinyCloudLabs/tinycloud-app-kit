@@ -1,0 +1,225 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.tinycloud.xyz/app-manifest/v1.json",
+  "title": "TinyCloud App Manifest v1",
+  "type": "object",
+  "additionalProperties": true,
+  "required": ["app_id", "name"],
+  "properties": {
+    "manifest_version": {
+      "type": "integer",
+      "const": 1,
+      "description": "Schema version. Missing means v1."
+    },
+    "app_id": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Stable application namespace."
+    },
+    "name": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Human-readable app or delegate name."
+    },
+    "description": {
+      "type": "string"
+    },
+    "did": {
+      "type": "string",
+      "description": "Delegate DID for this manifest."
+    },
+    "space": {
+      "type": "string",
+      "description": "Default TinyCloud space. Missing means applications."
+    },
+    "prefix": {
+      "type": "string",
+      "description": "Path prefix override. Missing means app_id; empty string disables prefixing."
+    },
+    "defaults": {
+      "oneOf": [
+        { "type": "boolean" },
+        { "type": "string", "enum": ["none", "standard", "admin", "all"] }
+      ]
+    },
+    "expiry": {
+      "type": "string",
+      "description": "Default permission expiry using ms-style durations such as 30d or 2h."
+    },
+    "includePublicSpace": {
+      "type": "boolean"
+    },
+    "knowledge": {
+      "$ref": "#/$defs/knowledgePointer"
+    },
+    "permissions": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/permission" }
+    },
+    "resources": {
+      "$ref": "#/$defs/resources"
+    }
+  },
+  "$defs": {
+    "knowledgePointer": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["format", "profile", "root"],
+      "properties": {
+        "format": {
+          "type": "string",
+          "const": "okf"
+        },
+        "profile": {
+          "type": "string",
+          "const": "tinycloud.app.v1"
+        },
+        "root": {
+          "type": "string",
+          "pattern": "^knowledge/.+\\.md$"
+        }
+      }
+    },
+    "permission": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["service", "path", "actions"],
+      "properties": {
+        "service": {
+          "type": "string",
+          "minLength": 1
+        },
+        "space": {
+          "type": "string"
+        },
+        "path": {
+          "type": "string"
+        },
+        "actions": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "skipPrefix": {
+          "type": "boolean"
+        },
+        "description": {
+          "type": "string"
+        }
+      }
+    },
+    "resources": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "kv": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/kvResource" }
+        },
+        "sql": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/sqlResource" }
+        },
+        "duckdb": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/duckdbResource" }
+        },
+        "secrets": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/secretResource" }
+        }
+      }
+    },
+    "kvResource": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["name", "prefix", "description"],
+      "properties": {
+        "name": { "type": "string", "minLength": 1 },
+        "prefix": { "type": "string", "minLength": 1 },
+        "description": { "type": "string", "minLength": 1 },
+        "capabilities": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "sensitivity": { "$ref": "#/$defs/sensitivity" }
+      }
+    },
+    "sqlResource": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["name", "engine"],
+      "properties": {
+        "name": { "type": "string", "minLength": 1 },
+        "engine": { "type": "string", "const": "sqlite" },
+        "schema": { "type": "string" },
+        "migrations": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/sqlMigration" }
+        },
+        "description": { "type": "string" },
+        "capabilities": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "sensitivity": { "$ref": "#/$defs/sensitivity" }
+      }
+    },
+    "sqlMigration": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "sql"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^[0-9A-Za-z][0-9A-Za-z._-]*$"
+        },
+        "description": {
+          "type": "string"
+        },
+        "sql": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    },
+    "duckdbResource": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["name", "description"],
+      "properties": {
+        "name": { "type": "string", "minLength": 1 },
+        "description": { "type": "string", "minLength": 1 },
+        "capabilities": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "sensitivity": { "$ref": "#/$defs/sensitivity" }
+      }
+    },
+    "secretResource": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["name", "description"],
+      "properties": {
+        "name": { "type": "string", "minLength": 1 },
+        "description": { "type": "string", "minLength": 1 },
+        "required": { "type": "boolean" },
+        "consumers": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "rotation": { "type": "string" }
+      }
+    },
+    "sensitivity": {
+      "type": "string",
+      "enum": ["public", "user-data", "private", "secret-reference", "derived", "ephemeral"]
+    }
+  }
+}
