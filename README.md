@@ -3,6 +3,24 @@
 Schemas, examples, guides, and skills for TinyCloud app manifests and
 agent-readable app packages.
 
+## TinyCloud Mini Apps
+
+A TinyCloud mini app is a small product surface with three inspectable parts:
+
+- `manifest.json` declares the app identity and the TinyCloud capabilities it
+  needs.
+- App code implements the browser, backend, storage, and delegation behavior.
+- `knowledge/` explains the app's resources so humans and agents can operate on
+  them safely.
+
+The browser owns identity and consent. Backends, workers, and agents should
+touch user data only through delegated TinyCloud access. `/api/manifest` is the
+runtime app contract; `/api/server-info` is the backend delegation policy.
+
+Use this repo as the contract reference. Use
+[`tinyboilerplate`](https://github.com/TinyCloudLabs/tinyboilerplate) when you
+want a runnable starter, scaffold command, or full-stack example.
+
 TinyCloud apps ship a runtime manifest plus a concise knowledge bundle:
 
 ```text
@@ -30,6 +48,7 @@ examples/
   minimal-app/
   sqlite-app/
 guides/
+  build-mini-apps.md
   author-a-manifest.md
   generate-knowledge.md
   sql-schema-and-migrations.md
