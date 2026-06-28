@@ -30,7 +30,7 @@ Prioritize:
 - SQL files identify databases, tables, derived state, and mutation rules.
 - KV files identify prefixes, value shape, lifecycle, and deletion policy.
 - SQL resources that run `CREATE`, `ALTER`, `DROP`, or index DDL request
-  `tinycloud.sql/ddl`.
+  `tinycloud.sql/schema`.
 - The database named in the manifest matches the database used by SDK calls.
 - `tc.sql` shortcut usage is understood as database `default`.
 - Materialized indexes read through or rebuild from canonical data.

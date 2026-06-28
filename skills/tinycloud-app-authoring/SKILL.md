@@ -16,7 +16,7 @@ Use this skill when creating or updating a TinyCloud app package.
 5. Keep capability details near the resource that requires them.
 6. Never write secret values into app knowledge files.
 7. For SQLite schema setup, use `sql.db(name).migrations.apply(...)` and require
-   `tinycloud.sql/ddl`.
+   `tinycloud.sql/schema`.
 8. Treat missing `defaults` as `true`; document implicit app-scoped KV and
    SQLite resources so authors do not over-request baseline access.
 

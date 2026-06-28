@@ -33,7 +33,7 @@ idempotent when SQLite allows it.
 
 ## Manifest Requirements
 
-The app manifest must describe the database and include `ddl` when migrations
+The app manifest must describe the database and include `schema` when migrations
 create or alter schema.
 
 ```json
@@ -43,7 +43,7 @@ create or alter schema.
       {
         "name": "main",
         "engine": "sqlite",
-        "capabilities": ["tinycloud.sql/read", "tinycloud.sql/write", "tinycloud.sql/ddl"],
+        "capabilities": ["tinycloud.sql/read", "tinycloud.sql/write", "tinycloud.sql/schema"],
         "migrations": [
           {
             "id": "001_initial",
@@ -64,7 +64,7 @@ equivalent to `tc.sql.db("default").execute(...)`.
 
 - Do not run cold DDL in hot user paths.
 - Do not assume `write` permission includes manifest-visible schema setup;
-  declare `ddl`.
+  declare `schema`.
 - Do not treat materialized SQLite indexes as canonical data. They should be
   rebuildable from KV, capabilities, or another source of truth.
 - Do not hide missing-table errors as empty states. Surface setup failures and

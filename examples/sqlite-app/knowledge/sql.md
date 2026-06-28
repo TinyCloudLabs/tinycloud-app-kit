@@ -27,7 +27,7 @@ Required capabilities:
 | --- | --- |
 | `tinycloud.sql/read` | Read search metadata. |
 | `tinycloud.sql/write` | Update derived index rows. |
-| `tinycloud.sql/ddl` | Apply schema migrations. |
+| `tinycloud.sql/schema` | Apply schema migrations. |
 
 ## Tables
 

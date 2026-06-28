@@ -67,4 +67,4 @@ npm run lint
 
 The linter is dependency-free. It parses schema/example JSON, checks
 `knowledge` pointers, verifies example knowledge roots exist, and catches SQL
-migrations that forgot `tinycloud.sql/ddl`.
+migrations that forgot `tinycloud.sql/schema`.

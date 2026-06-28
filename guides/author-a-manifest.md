@@ -41,7 +41,7 @@ Only add explicit permissions or resources when the app needs:
 
 - a different space
 - a path outside the default app prefix
-- non-default actions such as `tinycloud.sql/ddl`
+- non-default actions such as `tinycloud.sql/schema`
 - human/agent documentation for a specific resource
 
 Use `defaults: false` when every permission should be explicit.
@@ -68,7 +68,7 @@ composer still resolves concrete permissions from the manifest.
         "name": "main",
         "engine": "sqlite",
         "schema": "schema.sql",
-        "capabilities": ["tinycloud.sql/read", "tinycloud.sql/write", "tinycloud.sql/ddl"],
+        "capabilities": ["tinycloud.sql/read", "tinycloud.sql/write", "tinycloud.sql/schema"],
         "migrations": [
           {
             "id": "001_initial",
@@ -81,13 +81,13 @@ composer still resolves concrete permissions from the manifest.
 }
 ```
 
-Use `ddl` when the app applies schema migrations. The manifest permission must
+Use `schema` when the app applies schema migrations. The manifest permission must
 name the same database path the app uses at runtime. In TinyCloud SQL, shortcut
 calls target a SQLite database named `default`; `tc.sql.execute(...)` and
 `tc.sql.db("default").execute(...)` refer to the same database.
 
 The default SQL grant covers `read` and `write`, but not schema changes. Apps
-that run migrations still need `tinycloud.sql/ddl`.
+that run migrations still need `tinycloud.sql/schema`.
 
 ## Review Checklist
 
@@ -97,6 +97,6 @@ that run migrations still need `tinycloud.sql/ddl`.
 - The author understands what default KV/SQL capabilities already grant.
 - Secret resources describe references only.
 - Resource descriptions are specific enough for an agent to avoid guessing.
-- SQL resources that create or alter schema declare migrations and `ddl`.
+- SQL resources that create or alter schema declare migrations and `schema`.
 - Rebuildable SQLite indexes are documented as derived caches, not sources of
   truth.
