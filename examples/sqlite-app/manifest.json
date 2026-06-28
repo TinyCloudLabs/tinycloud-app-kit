@@ -20,7 +20,7 @@
         "engine": "sqlite",
         "schema": "schema.sql",
         "description": "Search and indexing metadata.",
-        "capabilities": ["tinycloud.sql/read", "tinycloud.sql/write", "tinycloud.sql/ddl"],
+        "capabilities": ["tinycloud.sql/read", "tinycloud.sql/write", "tinycloud.sql/schema"],
         "migrations": [
           {
             "id": "001_initial_note_index",

@@ -54,8 +54,8 @@ for (const manifestPath of walk(join(root, "examples"), (p) => p.endsWith("manif
   for (const sql of manifest.resources?.sql ?? []) {
     const capabilities = new Set(sql.capabilities ?? []);
     const hasMigrations = Array.isArray(sql.migrations) && sql.migrations.length > 0;
-    if (hasMigrations && !capabilities.has("tinycloud.sql/ddl")) {
-      fail(`${relative(root, manifestPath)} SQL resource ${sql.name} has migrations but lacks tinycloud.sql/ddl`);
+    if (hasMigrations && !capabilities.has("tinycloud.sql/schema")) {
+      fail(`${relative(root, manifestPath)} SQL resource ${sql.name} has migrations but lacks tinycloud.sql/schema`);
     }
     for (const migration of sql.migrations ?? []) {
       if (typeof migration.id !== "string" || migration.id.length === 0) {
