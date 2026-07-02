@@ -19,7 +19,9 @@ runtime app contract; `/api/server-info` is the backend delegation policy.
 
 Use this repo as the contract reference. Use
 [`tinyboilerplate`](https://github.com/TinyCloudLabs/tinyboilerplate) when you
-want a runnable starter, scaffold command, or full-stack example.
+want a runnable starter, scaffold command, or full-stack example. See
+[protocol.tinycloud.xyz](https://protocol.tinycloud.xyz) for the protocol
+concepts and how apps work.
 
 TinyCloud apps ship a runtime manifest plus a concise knowledge bundle:
 
@@ -49,6 +51,7 @@ examples/
   sqlite-app/
 guides/
   build-mini-apps.md
+  ship-checklist.md
   author-a-manifest.md
   generate-knowledge.md
   sql-schema-and-migrations.md
