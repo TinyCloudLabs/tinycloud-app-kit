@@ -47,22 +47,39 @@ check with a read and write only when a migration is pending:
   when something is missing (`migrations` is the same array as above):
 
   ```ts
-  const db = tc.sql.db("main");
-  const applied = await db.query(
-    "SELECT id FROM __tinycloud_sql_migrations WHERE namespace = ?",
-    ["com.example.notes"],
-  );
-  // "No such table" or database-not-found means nothing is applied yet.
-  const nothingApplied =
-    !applied.ok &&
-    (applied.error.code === "SQL_DATABASE_NOT_FOUND" ||
-      /no such table|database not found/i.test(applied.error.message));
-  if (!applied.ok && !nothingApplied) throw new Error(applied.error.message);
-  const appliedIds = new Set(applied.ok ? applied.data.rows.map((row) => row[0]) : []);
-  if (migrations.some((migration) => !appliedIds.has(migration.id))) {
-    await db.migrations.apply({ namespace: "com.example.notes", migrations });
+  import type { IDatabaseHandle } from "@tinycloud/sdk-services";
+
+  // Returns the SDK result instead of throwing, so the caller can classify the
+  // error. SDK calls return `{ ok: false, error }` rather than throwing.
+  async function applyPendingMigrations(db: IDatabaseHandle) {
+    const applied = await db.query(
+      "SELECT id FROM __tinycloud_sql_migrations WHERE namespace = ?",
+      ["com.example.notes"],
+    );
+    // "No such table" or database-not-found means nothing is applied yet.
+    const nothingApplied =
+      !applied.ok &&
+      (applied.error.code === "SQL_DATABASE_NOT_FOUND" ||
+        /no such table|database not found/i.test(applied.error.message));
+    if (!applied.ok && !nothingApplied) return applied;
+    const appliedIds = new Set(applied.ok ? applied.data.rows.map((row) => row[0]) : []);
+    if (migrations.every((migration) => appliedIds.has(migration.id))) return { ok: true };
+    return db.migrations.apply({ namespace: "com.example.notes", migrations });
   }
+
+  const schema = await applyPendingMigrations(tc.sql.db("main"));
+  if (!schema.ok) {
+    // Pass the SDK error on unchanged so its code (or, on older SDKs, the
+    // node's 402 text) reaches the storage-full check in "Detecting It".
+    if (isStorageFull(schema.error)) enterReadOnly(schema.error);
+    else throw new Error(`Schema setup failed: ${schema.error.message}`, { cause: schema.error });
+  }
+  // On storage full, carry on: load and show whatever can be read.
   ```
+
+  `isStorageFull` and `enterReadOnly` are the app's own storage-full check and
+  read-only state (see "Storage Full" below). Do not wrap the error in a new
+  message without keeping it as `cause`; the check needs its code.
 
 - Apps that create their schema lazily, on the first save, instead of on open
   must keep list and get paths free of DDL. Run the `SELECT`, and treat a
@@ -104,8 +121,10 @@ equivalent to `tc.sql.db("default").execute(...)`.
 ## Footguns
 
 - Do not run cold DDL in hot user paths, and never put a write in front of a
-  read. `CREATE TABLE IF NOT EXISTS` is still a write: a full account refuses
-  it.
+  read. `CREATE TABLE IF NOT EXISTS` and other schema setup are writes: they
+  may grow storage, and a full account may reject them. Newer nodes allow
+  schema writes that change nothing, but older nodes refuse every non-read
+  statement on a full account, so do not rely on it.
 - Do not assume `write` permission includes manifest-visible schema setup;
   declare `schema`.
 - Do not treat materialized SQLite indexes as canonical data. They should be
