@@ -25,20 +25,17 @@
       "path": "prefs/",
       "actions": [
         "get",
-        "put",
-        "del",
-        "list"
+        "put"
       ],
-      "description": "Read and change the app's settings (daily targets, units)."
+      "description": "Read and change the app's settings (daily calorie target)."
     },
     {
       "service": "tinycloud.kv",
       "path": "app/",
       "actions": [
-        "get",
-        "list"
+        "get"
       ],
-      "description": "Read the installed copy of the app (code, schema). The app cannot change its own code."
+      "description": "Read the installed copy of the app (schema). The app cannot change its own code."
     },
     {
       "service": "tinycloud.kv",

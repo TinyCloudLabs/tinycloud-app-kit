@@ -16,19 +16,27 @@
 //
 //   kv.get(key)                          -> { ok, bytes: Uint8Array, contentType? }
 //   kv.put(key, body, opts?)             -> { ok }        body: string | Uint8Array
-//                                           opts: { contentType?, ifNoneMatch?: true }
+//                                           opts: { contentType?: string, ifNoneMatch?: true };
+//                                           null/undefined opts mean {}, anything else that is
+//                                           not a plain object of those keys is BAD_REQUEST
 //   kv.list(prefix = "")                 -> { ok, keys: string[], truncated }
 //   kv.del(key)                          -> { ok }
 //   sql.query(db, text, params = [])     -> { ok, columns: string[], rows: any[][], rowCount }
 //   sql.execute(db, text, params = [])   -> { ok, changes, lastInsertRowId }
 //
 // Paths: `key` and `db` are relative to `<app_id>/` ("prefs/goals.json",
-// "healthlog"). A leading "/" means an absolute path in the space (only
-// reachable if a manifest grant uses skipPrefix). `kv.list` returns keys in the
-// same relative form. params: string | number | boolean | null.
+// "healthlog"). A leading "/" means an absolute path in the space; it is
+// checked against the manifest like any other path, so it only succeeds where a
+// grant covers it. `kv.list(prefix)` needs a grant that covers `prefix` (here:
+// none covers the bare app root, so `kv.list("")` is PERMISSION_DENIED) and
+// returns keys in the same relative form. params: string | number | boolean | null.
+// Statement classes: `sql.query` accepts ONE read-only statement (see classifySql),
+// `sql.execute` one write or schema statement; the class decides the ability
+// checked against the manifest. The node enforces by ability, not by call name.
 // Error codes: PERMISSION_DENIED NOT_FOUND PRECONDITION_FAILED SQL_ERROR
 //   BAD_REQUEST TOO_LARGE BUSY TIMEOUT INTERNAL NOT_CONNECTED
-// Caps: 1 MB per call (JSON size of the arguments), 4 in flight (the 5th is
+// Caps: 1 MB per call (size of the arguments: strings as UTF-8, binary as is,
+//   8 bytes per other value), 4 in flight (the 5th is
 //   refused with BUSY, not queued), 30 s per call (TIMEOUT: the call may still
 //   have been applied, so read back before retrying a write).
 // ---------------------------------------------------------------------------
@@ -63,33 +71,116 @@ function makeAuthorizer(manifest) {
     );
 }
 
-const SQL_READ = new Set(["SELECT", "WITH", "VALUES", "EXPLAIN"]);
-const SQL_SCHEMA = new Set(["CREATE", "DROP", "ALTER", "REINDEX"]);
-const SQL_WRITE = new Set(["INSERT", "UPDATE", "DELETE", "REPLACE"]);
-
-/** Coarse statement class used for the parent-side check: read | write | schema | null. */
+/**
+ * T5b: the real bridge MUST implement this classification.
+ *
+ * tinycloud-node enforces SQL by the ABILITY the delegation carries (read / write /
+ * schema), not by which call the client used: on v1.20.6 and v1.21.0 a `DROP TABLE`
+ * sent to the query endpoint with a schema-capable delegation executes. So the parent
+ * has to classify every statement itself, refuse what it cannot classify, and only then
+ * check the manifest for that class.
+ *
+ *   -> "read"    exactly ONE statement: SELECT, VALUES, a read-only WITH ... SELECT, or
+ *                EXPLAIN [QUERY PLAN] of one of those
+ *   -> "write"   exactly ONE INSERT / UPDATE / DELETE / REPLACE (also WITH ... INSERT|UPDATE|DELETE)
+ *   -> "schema"  exactly ONE CREATE / DROP / ALTER / REINDEX
+ *   -> null      anything else: empty or unterminated text, more than one statement (a `;`
+ *                outside literals and comments, except one trailing), PRAGMA, ATTACH, DETACH,
+ *                VACUUM, load_extension anywhere, WITH ... with a schema/maintenance word,
+ *                or any other first word.
+ *
+ * `sql.query` accepts only "read"; `sql.execute` only "write" and "schema".
+ * Comments and string / quoted-identifier literals are blanked first, so keywords inside
+ * them never count and nothing can hide behind them.
+ */
 export function classifySql(text) {
-  const stripped = text.replace(/^(\s+|--[^\n]*\n?|\/\*[\s\S]*?\*\/)+/, "");
-  const word = /^[A-Za-z]+/.exec(stripped)?.[0]?.toUpperCase();
-  if (!word) return null;
-  if (SQL_READ.has(word)) return "read";
-  if (SQL_SCHEMA.has(word)) return "schema";
-  if (SQL_WRITE.has(word)) return "write";
-  return null;
+  if (typeof text !== "string") return null;
+  const code = blankLiteralsAndComments(text);
+  if (code === null) return null;
+  // one statement: drop a single trailing `;`, then no other `;` may remain
+  const body = code.replace(/;\s*$/, "").trim();
+  if (body === "" || body.includes(";")) return null;
+  const words = body.match(/[A-Za-z_][A-Za-z0-9_]*/g)?.map((w) => w.toUpperCase()) ?? [];
+  if (words.length === 0 || words.includes("LOAD_EXTENSION")) return null;
+  const first = words[0];
+  const has = (...ws) => ws.some((w) => words.includes(w));
+  // REPLACE( is the string function; a bare REPLACE is the statement
+  const replaceStatement = /\bREPLACE\b(?!\s*\()/i.test(body);
+
+  if (first === "SELECT" || first === "VALUES") return "read";
+  if (first === "EXPLAIN") {
+    const rest = body.replace(/^\s*EXPLAIN\s+(QUERY\s+PLAN\s+)?/i, "");
+    return classifySql(rest) === "read" ? "read" : null;
+  }
+  if (first === "WITH") {
+    if (has("CREATE", "DROP", "ALTER", "REINDEX", "PRAGMA", "ATTACH", "DETACH", "VACUUM")) return null;
+    return has("INSERT", "UPDATE", "DELETE") || replaceStatement ? "write" : "read";
+  }
+  if (first === "INSERT" || first === "UPDATE" || first === "DELETE" || (first === "REPLACE" && replaceStatement)) return "write";
+  if (first === "CREATE" || first === "DROP" || first === "ALTER" || first === "REINDEX") return "schema";
+  return null; // PRAGMA, ATTACH, DETACH, VACUUM, BEGIN, COMMIT, ... and anything unknown
+}
+
+/** Replace comments with a space and literals with empty ones; null if one is unterminated. */
+function blankLiteralsAndComments(text) {
+  let out = "";
+  for (let i = 0; i < text.length; ) {
+    const c = text[i];
+    const n = text[i + 1];
+    if (c === "-" && n === "-") {
+      const e = text.indexOf("\n", i);
+      i = e === -1 ? text.length : e + 1;
+      out += " ";
+    } else if (c === "/" && n === "*") {
+      const e = text.indexOf("*/", i + 2);
+      if (e === -1) return null;
+      i = e + 2;
+      out += " ";
+    } else if (c === "'" || c === '"' || c === "`") {
+      let j = i + 1;
+      for (;;) {
+        if (j >= text.length) return null;
+        if (text[j] === c) {
+          if (text[j + 1] === c) j += 2; // doubled quote is an escaped quote
+          else break;
+        } else j += 1;
+      }
+      out += `${c}${c}`;
+      i = j + 1;
+    } else if (c === "[") {
+      const e = text.indexOf("]", i + 1);
+      if (e === -1) return null;
+      out += '""';
+      i = e + 1;
+    } else {
+      out += c;
+      i += 1;
+    }
+  }
+  return out;
 }
 
 // ------------------------------------------------------------------- plumbing
 
+/** Size in bytes of call arguments; null when they are not plain data (circular, odd objects). */
 function sizeOf(value) {
   let bytes = 0;
+  const seen = new Set();
   const walk = (v) => {
     if (v instanceof Uint8Array) bytes += v.byteLength;
     else if (typeof v === "string") bytes += Buffer.byteLength(v);
-    else if (Array.isArray(v)) v.forEach(walk);
-    else if (v && typeof v === "object") Object.values(v).forEach(walk);
-    else bytes += 8;
+    else if (Array.isArray(v) || (v && typeof v === "object")) {
+      if (seen.has(v)) throw new TypeError("circular");
+      seen.add(v);
+      for (const x of Array.isArray(v) ? v : Object.values(v)) walk(x);
+      seen.delete(v);
+    } else bytes += 8;
   };
-  walk(value);
+  try {
+    walk(value);
+  } catch {
+    return null;
+  }
   return bytes;
 }
 
@@ -105,6 +196,28 @@ function mapNodeError(e) {
   if (/UNAUTHORIZED|PERMISSION|FORBIDDEN/.test(code)) return err("PERMISSION_DENIED", message);
   if (code.startsWith("SQL_")) return err("SQL_ERROR", message);
   return err("INTERNAL", message);
+}
+
+/** Copy of kv.put options as plain data, or null if they are not { contentType?: string, ifNoneMatch?: true }. */
+function cleanPutOpts(raw) {
+  if (raw === undefined || raw === null) return {};
+  if (typeof raw !== "object" || Array.isArray(raw)) return null;
+  try {
+    const keys = Object.keys(raw);
+    if (keys.some((k) => k !== "contentType" && k !== "ifNoneMatch")) return null;
+    const out = {};
+    if (raw.contentType !== undefined) {
+      if (typeof raw.contentType !== "string" || raw.contentType.length > 200) return null;
+      out.contentType = raw.contentType;
+    }
+    if (raw.ifNoneMatch !== undefined) {
+      if (raw.ifNoneMatch !== true) return null;
+      out.ifNoneMatch = true;
+    }
+    return out;
+  } catch {
+    return null; // a throwing getter or proxy
+  }
 }
 
 const PARAM_OK = (p) => p === null || ["string", "number", "boolean"].includes(typeof p);
@@ -138,7 +251,9 @@ export async function connect({ manifest, host, privateKey, node, limits = {} })
   /** Runs one bridge call with the caps, then applies any injected fault. */
   async function call(op, args, run) {
     const req = { op, args };
-    if (sizeOf(args) > cfg.maxMessageBytes) return err("TOO_LARGE", `Call exceeds ${cfg.maxMessageBytes} bytes.`);
+    const size = sizeOf(args);
+    if (size === null) return err("BAD_REQUEST", "Arguments must be plain data.");
+    if (size > cfg.maxMessageBytes) return err("TOO_LARGE", `Call exceeds ${cfg.maxMessageBytes} bytes.`);
     if (inFlight >= cfg.maxInFlight) return err("BUSY", `More than ${cfg.maxInFlight} calls in flight.`);
     inFlight += 1;
     let timer;
@@ -167,7 +282,7 @@ export async function connect({ manifest, host, privateKey, node, limits = {} })
   }
 
   const kvOp = (op, action, path, args, run) => {
-    // kv.list("") means "the app's whole prefix"; every other path must be non-empty.
+    // kv.list("") names the app's whole prefix (and is then checked like any path); every other path must be non-empty.
     if (!(op === "list" && path === "") && badPath(path)) return Promise.resolve(err("BAD_REQUEST", `Invalid path for kv.${op}.`));
     const abs = path.startsWith("/") ? path.slice(1) : absolute(path);
     if (!allowed("tinycloud.kv", abs, action)) {
@@ -198,9 +313,19 @@ export async function connect({ manifest, host, privateKey, node, limits = {} })
     });
   };
 
+  // Nothing the app passes in may make a bridge call throw or reject.
+  const safe = (fn) => (...a) =>
+    new Promise((resolve) => {
+      try {
+        Promise.resolve(fn(...a)).then(resolve, (e) => resolve(err("INTERNAL", String(e?.message ?? e).slice(0, 500))));
+      } catch (e) {
+        resolve(err("INTERNAL", String(e?.message ?? e).slice(0, 500)));
+      }
+    });
+
   const bridge = {
     kv: {
-      get: (key) =>
+      get: safe((key) =>
         kvOp("get", "get", key, { key }, async (abs) => {
           const r = await tc.kv.get(abs, { binary: true });
           if (!r.ok) return mapNodeError(r.error);
@@ -208,8 +333,11 @@ export async function connect({ manifest, host, privateKey, node, limits = {} })
           const bytes = d instanceof Uint8Array ? d : typeof d === "string" ? new TextEncoder().encode(d) : Uint8Array.from(Object.values(d));
           return { ok: true, bytes, contentType: r.data.headers?.contentType };
         }),
-      put: (key, body, opts = {}) => {
-        if (typeof body !== "string" && !(body instanceof Uint8Array)) return Promise.resolve(err("BAD_REQUEST", "body must be a string or Uint8Array."));
+      ),
+      put: safe((key, body, rawOpts) => {
+        if (typeof body !== "string" && !(body instanceof Uint8Array)) return err("BAD_REQUEST", "body must be a string or Uint8Array.");
+        const opts = cleanPutOpts(rawOpts);
+        if (opts === null) return err("BAD_REQUEST", "opts must be { contentType?: string, ifNoneMatch?: true }.");
         return kvOp("put", "put", key, { key, body, opts }, async (abs) => {
           const r = await tc.kv.put(abs, body, {
             contentType: opts.contentType ?? (typeof body === "string" ? "text/plain" : "application/octet-stream"),
@@ -217,22 +345,24 @@ export async function connect({ manifest, host, privateKey, node, limits = {} })
           });
           return r.ok ? { ok: true } : mapNodeError(r.error);
         });
-      },
-      list: (prefixRel = "") =>
+      }),
+      list: safe((prefixRel = "") =>
         kvOp("list", "list", prefixRel, { prefix: prefixRel }, async (abs) => {
           const r = await tc.kv.list({ prefix: abs });
           if (!r.ok) return mapNodeError(r.error);
           return { ok: true, keys: r.data.keys.map(relative), truncated: Boolean(r.data.truncated) };
         }),
-      del: (key) =>
+      ),
+      del: safe((key) =>
         kvOp("del", "del", key, { key }, async (abs) => {
           const r = await tc.kv.delete(abs);
           return r.ok ? { ok: true } : mapNodeError(r.error);
         }),
+      ),
     },
     sql: {
-      query: (db, text, params = []) => sqlOp("query", db, text, params, "query"),
-      execute: (db, text, params = []) => sqlOp("execute", db, text, params, "execute"),
+      query: safe((db, text, params = []) => sqlOp("query", db, text, params, "query")),
+      execute: safe((db, text, params = []) => sqlOp("execute", db, text, params, "execute")),
     },
     // ---- dev/test handles (never part of the app-facing contract) ----
     node: tc,

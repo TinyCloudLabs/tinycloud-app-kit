@@ -193,20 +193,27 @@ export async function ensureSchema() {
   return { ok: true, created: true };
 }
 
+export const GOAL_MESSAGE = "Daily target must be a whole number from 500 to 10000 kcal.";
+
+/** A usable daily target: a whole number of kcal from 500 to 10000. */
+export function isValidGoal(kcal) {
+  return Number.isInteger(kcal) && kcal >= 500 && kcal <= 10000;
+}
+
 export async function loadGoals() {
   const r = await kv.get(GOALS_KEY);
   if (!r.ok) return { ...DEFAULT_GOALS };
   try {
     const parsed = JSON.parse(decoder.decode(r.bytes));
-    return { ...DEFAULT_GOALS, ...(Number.isFinite(parsed?.kcal) ? { kcal: parsed.kcal } : {}) };
+    return isValidGoal(parsed?.kcal) ? { ...DEFAULT_GOALS, kcal: parsed.kcal } : { ...DEFAULT_GOALS };
   } catch {
     return { ...DEFAULT_GOALS };
   }
 }
 
 export async function saveGoals(goals) {
-  const kcal = Math.round(Number(goals?.kcal));
-  if (!Number.isFinite(kcal) || kcal < 500 || kcal > 10000) return invalid("Daily target must be 500 to 10000 kcal.");
+  const kcal = typeof goals?.kcal === "number" ? goals.kcal : NaN;
+  if (!isValidGoal(kcal)) return invalid(GOAL_MESSAGE);
   return kv.put(GOALS_KEY, JSON.stringify({ kcal }), { contentType: "application/json" });
 }
 
@@ -316,9 +323,30 @@ function Macro({ label, value, testId }) {
 
 export function TodayCard({ day, card: dayCard, meals = [], goals = DEFAULT_GOALS, onGoal }) {
   const kcal = dayCard?.kcal ?? 0;
-  const pct = Math.min(100, Math.round((kcal / goals.kcal) * 100));
+  const pct = isValidGoal(goals.kcal) ? Math.min(100, Math.round((kcal / goals.kcal) * 100)) : 0;
   const [goalText, setGoalText] = useState(String(goals.kcal));
+  const [goalError, setGoalError] = useState(null);
   useEffect(() => setGoalText(String(goals.kcal)), [goals.kcal]);
+
+  // Commit on blur. An invalid value is never stored and never kept on screen: the
+  // field goes back to the current target and an alert says why.
+  async function commitGoal() {
+    const text = goalText.trim();
+    if (text === String(goals.kcal)) return setGoalError(null);
+    const n = /^\d+$/.test(text) ? Number(text) : NaN;
+    if (!isValidGoal(n)) {
+      setGoalError(GOAL_MESSAGE);
+      setGoalText(String(goals.kcal));
+      return;
+    }
+    const r = await onGoal?.(n);
+    if (r && !r.ok) {
+      setGoalError(r.error?.message ?? "Could not save the daily target.");
+      setGoalText(String(goals.kcal));
+    } else {
+      setGoalError(null);
+    }
+  }
   return (
     <section className={card} data-testid="today-card" aria-label="Today">
       <div className="flex items-baseline justify-between">
@@ -337,13 +365,20 @@ export function TodayCard({ day, card: dayCard, meals = [], goals = DEFAULT_GOAL
             className={`${input} mt-1 w-24`}
             inputMode="numeric"
             value={goalText}
-            onChange={(e) => setGoalText(e.target.value)}
-            onBlur={() => {
-              if (Number(goalText) !== goals.kcal) onGoal?.(Number(goalText));
+            onChange={(e) => {
+              setGoalText(e.target.value);
+              setGoalError(null);
             }}
+            onBlur={commitGoal}
+            aria-invalid={goalError ? "true" : undefined}
           />
         </label>
       </div>
+      {goalError && (
+        <p role="alert" className="mt-1 text-sm text-red-600 dark:text-red-400" data-testid="goal-error">
+          {goalError}
+        </p>
+      )}
       <div className="mt-2 h-2 overflow-hidden rounded-full bg-neutral-200 dark:bg-neutral-800" role="progressbar" aria-valuenow={pct} aria-valuemin={0} aria-valuemax={100}>
         <div className="h-full bg-emerald-500" style={{ width: `${pct}%` }} data-testid="today-progress" />
       </div>
@@ -468,6 +503,13 @@ export function WeightForm({ onSubmit }) {
   );
 }
 
+/** One line of text for the chart: every day, its kcal and weight. Used as the chart's accessible name. */
+export function weekSummaryText(rows) {
+  return rows
+    .map((r) => `${r.label}: ${r.meals > 0 ? `${fmt(r.kcal)} kcal` : "no meals"}${r.weight_kg != null ? `, ${fmt(r.weight_kg, 1)} kg` : ""}`)
+    .join("; ");
+}
+
 export function WeekChart({ rows }) {
   const data = useMemo(() => rows.map((r) => ({ ...r, weight: r.weight_kg ?? null })), [rows]);
   const weights = data.map((d) => d.weight).filter((w) => w != null);
@@ -476,13 +518,23 @@ export function WeekChart({ rows }) {
   return (
     <section className={card} data-testid="week-chart" aria-label="Last 7 days">
       <h2 className="text-lg font-semibold">Last 7 days</h2>
-      <div className="mt-3 h-60 w-full">
+      <ul className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-neutral-600 dark:text-neutral-300" data-testid="week-legend">
+        <li className="flex items-center gap-1.5">
+          <span aria-hidden="true" className="inline-block h-2.5 w-2.5 rounded-sm bg-emerald-500" />
+          Calories (bars, left axis, kcal)
+        </li>
+        <li className="flex items-center gap-1.5">
+          <span aria-hidden="true" className="inline-block h-0.5 w-4 bg-indigo-500" />
+          Weight (line, right axis, kg)
+        </li>
+      </ul>
+      <div className="mt-2 h-60 w-full text-neutral-600 dark:text-neutral-300" role="img" aria-label={weekSummaryText(data)} data-testid="week-chart-plot">
         <ResponsiveContainer width="100%" height="100%">
-          <ComposedChart data={data} margin={{ top: 8, right: 8, bottom: 0, left: 0 }}>
-            <CartesianGrid strokeDasharray="3 3" vertical={false} />
-            <XAxis dataKey="label" tickLine={false} />
-            <YAxis yAxisId="kcal" width={48} tickLine={false} axisLine={false} />
-            <YAxis yAxisId="kg" orientation="right" width={48} domain={[lo, hi]} tickLine={false} axisLine={false} />
+          <ComposedChart data={data} margin={{ top: 8, right: 4, bottom: 0, left: 0 }}>
+            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="currentColor" strokeOpacity={0.2} />
+            <XAxis dataKey="label" tickLine={false} interval={0} tick={{ fill: "currentColor", fontSize: 11 }} />
+            <YAxis yAxisId="kcal" width={40} tickLine={false} axisLine={false} tick={{ fill: "currentColor", fontSize: 11 }} />
+            <YAxis yAxisId="kg" orientation="right" width={36} domain={[lo, hi]} tickLine={false} axisLine={false} tick={{ fill: "currentColor", fontSize: 11 }} />
             <Tooltip />
             <Bar yAxisId="kcal" dataKey="kcal" name="kcal" fill="#10b981" radius={[4, 4, 0, 0]} isAnimationActive={false} />
             <Line yAxisId="kg" dataKey="weight" name="kg" stroke="#6366f1" strokeWidth={2} connectNulls dot isAnimationActive={false} />
@@ -546,6 +598,7 @@ export default function App({ now = () => new Date() } = {}) {
     async (kcal) => {
       const r = await saveGoals({ kcal });
       if (r.ok) await refresh();
+      return r;
     },
     [refresh],
   );
