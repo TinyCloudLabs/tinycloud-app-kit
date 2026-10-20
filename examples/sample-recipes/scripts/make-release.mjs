@@ -30,7 +30,7 @@ export function buildRelease() {
     schema: "tinycloud.app-release/v1",
     app_id: manifest.app_id,
     version: manifest.appVersion,
-    forked_from: manifest.forked_from ?? null,
+    ...(manifest.forked_from ? { forked_from: manifest.forked_from } : {}),
     files,
     digest,
   };

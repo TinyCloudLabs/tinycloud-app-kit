@@ -17,8 +17,10 @@ import { startNode } from "./node.mjs";
 const read = (p) => readFileSync(join(ROOT, p), "utf8");
 export const recipesManifest = JSON.parse(read("manifest.json"));
 export const recipesSchema = read("schema.sql");
-export const healthManifest = JSON.parse(read("tests/fixtures/healthlog/healthlog.app.json"));
-export const healthSchema = read("tests/fixtures/healthlog/schema.sql");
+// The Health Log sample is the single source of truth for the other app's manifest and schema.
+const HEALTH_DIR = "../sample-healthlog";
+export const healthManifest = JSON.parse(read(`${HEALTH_DIR}/manifest.json`));
+export const healthSchema = read(`${HEALTH_DIR}/schema.sql`);
 export const HEALTH_DB = `${healthManifest.app_id}/healthlog`;
 export const RECIPES_DB = `${recipesManifest.app_id}/recipes`;
 

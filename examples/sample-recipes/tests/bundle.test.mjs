@@ -23,7 +23,7 @@ describe("manifest", () => {
     validateManifest(manifest);
     assert.equal(APP, "xyz.tinycloud.sample.recipes");
     assert.equal(manifest.knowledge, "knowledge/index.md");
-    assert.equal(manifest.forked_from, null);
+    assert.equal("forked_from" in manifest, false, "an original publisher's manifest does not carry forked_from");
     assert.equal(manifest.defaults, false);
     assert.equal(manifest.space, "applications");
   });

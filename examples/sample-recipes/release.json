@@ -2,12 +2,11 @@
   "schema": "tinycloud.app-release/v1",
   "app_id": "xyz.tinycloud.sample.recipes",
   "version": "0.1.0",
-  "forked_from": null,
   "files": [
     {
       "path": "app.jsx",
-      "sha256": "bff82184fb30899461dd16ba8045463641e4dac8e772ff00829cb9c7733f747b",
-      "size": 41202
+      "sha256": "7c3692f94830aa3539700473df2e322301487a8ee2318fa94d3340c6d2cc08cd",
+      "size": 42451
     },
     {
       "path": "knowledge/app.md",
@@ -76,8 +75,8 @@
     },
     {
       "path": "manifest.json",
-      "sha256": "d67a17ebe116543315abeb58d143e0dc14792df0780fdb47ad1ebb3ff8c08aaa",
-      "size": 1984
+      "sha256": "20a13b7b5dfcc1efefb8503f7854f1367a554b05c4120479e9d153c799c9876c",
+      "size": 1961
     },
     {
       "path": "schema.sql",
@@ -85,5 +84,5 @@
       "size": 5164
     }
   ],
-  "digest": "56cb48bba1e4fe8ffa68580c3698fbf470be9ba6e8340ddf11c0d070ade4cd62"
+  "digest": "158c2524dcc1aa914f95392d42ae4a0f971cbf6349ec52a880fd66c97d74ef52"
 }

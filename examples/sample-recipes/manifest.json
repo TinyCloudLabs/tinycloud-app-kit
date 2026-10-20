@@ -9,7 +9,6 @@
   "includePublicSpace": false,
   "expiry": "1h",
   "knowledge": "knowledge/index.md",
-  "forked_from": null,
   "permissions": [
     {
       "service": "tinycloud.sql",

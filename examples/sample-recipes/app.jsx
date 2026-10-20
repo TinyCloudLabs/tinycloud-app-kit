@@ -399,9 +399,9 @@ export function validateForm(form) {
 
 const btn = "rounded-md px-3 py-1.5 text-sm font-medium focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500";
 const btnPrimary = `${btn} bg-emerald-600 text-white hover:bg-emerald-700 disabled:opacity-50`;
-const btnPlain = `${btn} border border-stone-300 bg-white text-stone-800 hover:bg-stone-50`;
-const btnDanger = `${btn} border border-red-300 bg-white text-red-700 hover:bg-red-50`;
-const field = "w-full rounded-md border border-stone-300 bg-white px-2 py-1.5 text-sm text-stone-900";
+const btnPlain = `${btn} border border-stone-300 bg-white text-stone-800 hover:bg-stone-50 dark:border-stone-600 dark:bg-stone-900 dark:text-stone-200 dark:hover:bg-stone-800`;
+const btnDanger = `${btn} border border-red-300 bg-white text-red-700 hover:bg-red-50 dark:border-red-800 dark:bg-stone-900 dark:text-red-300 dark:hover:bg-red-950`;
+const field = "w-full rounded-md border border-stone-300 bg-white px-2 py-1.5 text-sm text-stone-900 dark:border-stone-600 dark:bg-stone-900 dark:text-stone-100";
 
 function Macros({ recipe }) {
   const parts = [];
@@ -409,12 +409,12 @@ function Macros({ recipe }) {
   if (recipe.protein_g !== null && recipe.protein_g !== undefined) parts.push(`${recipe.protein_g} g protein`);
   if (recipe.carbs_g !== null && recipe.carbs_g !== undefined) parts.push(`${recipe.carbs_g} g carbs`);
   if (recipe.fat_g !== null && recipe.fat_g !== undefined) parts.push(`${recipe.fat_g} g fat`);
-  if (parts.length === 0) return <span className="text-stone-500">No nutrition entered</span>;
+  if (parts.length === 0) return <span className="text-stone-500 dark:text-stone-400">No nutrition entered</span>;
   return <span>{parts.join(" · ")}</span>;
 }
 
 function Banner({ tone = "info", children }) {
-  const colors = tone === "error" ? "border-red-300 bg-red-50 text-red-900" : "border-amber-300 bg-amber-50 text-amber-900";
+  const colors = tone === "error" ? "border-red-300 bg-red-50 text-red-900 dark:border-red-800 dark:bg-red-950 dark:text-red-200" : "border-amber-300 bg-amber-50 text-amber-900 dark:border-amber-700 dark:bg-amber-950 dark:text-amber-200";
   return (
     <div role={tone === "error" ? "alert" : "status"} className={`rounded-md border px-3 py-2 text-sm ${colors}`}>
       {children}
@@ -462,7 +462,7 @@ function RecipeList({ shelves, prefs, onPrefs, onOpen, onAdd, onFromMeal, onShel
 
       <div className="flex flex-wrap items-center gap-2" role="group" aria-label="Shelves">
         <button
-          className={`${btn} ${shelfId === null ? "bg-stone-800 text-white" : "bg-stone-100 text-stone-800"}`}
+          className={`${btn} ${shelfId === null ? "bg-stone-800 text-white dark:bg-stone-100 dark:text-stone-900" : "bg-stone-100 text-stone-800 dark:bg-stone-800 dark:text-stone-200"}`}
           aria-pressed={shelfId === null}
           onClick={() => onPrefs({ shelf: null })}
         >
@@ -471,7 +471,7 @@ function RecipeList({ shelves, prefs, onPrefs, onOpen, onAdd, onFromMeal, onShel
         {shelves.map((s) => (
           <button
             key={s.id}
-            className={`${btn} ${shelfId === s.id ? "bg-stone-800 text-white" : "bg-stone-100 text-stone-800"}`}
+            className={`${btn} ${shelfId === s.id ? "bg-stone-800 text-white dark:bg-stone-100 dark:text-stone-900" : "bg-stone-100 text-stone-800 dark:bg-stone-800 dark:text-stone-200"}`}
             aria-pressed={shelfId === s.id}
             onClick={() => onPrefs({ shelf: s.id })}
           >
@@ -499,9 +499,9 @@ function RecipeList({ shelves, prefs, onPrefs, onOpen, onAdd, onFromMeal, onShel
       </div>
 
       {recipes === null ? (
-        <p className="text-sm text-stone-500">Loading recipes…</p>
+        <p className="text-sm text-stone-500 dark:text-stone-400">Loading recipes…</p>
       ) : recipes.length === 0 ? (
-        <p className="rounded-md border border-dashed border-stone-300 p-6 text-center text-sm text-stone-600">
+        <p className="rounded-md border border-dashed border-stone-300 dark:border-stone-600 p-6 text-center text-sm text-stone-600 dark:text-stone-400">
           No recipes here yet. Add one, or start from a meal in your health log.
         </p>
       ) : (
@@ -509,18 +509,18 @@ function RecipeList({ shelves, prefs, onPrefs, onOpen, onAdd, onFromMeal, onShel
           {recipes.map((r) => (
             <li key={r.id}>
               <button
-                className="w-full rounded-lg border border-stone-200 bg-white p-3 text-left shadow-sm hover:border-emerald-400"
+                className="w-full rounded-lg border border-stone-200 bg-white p-3 text-left shadow-sm hover:border-emerald-400 dark:border-stone-700 dark:bg-stone-900"
                 onClick={() => onOpen(r.id)}
               >
                 <div className="flex items-start justify-between gap-2">
-                  <span className="font-semibold text-stone-900">{r.title}</span>
+                  <span className="font-semibold text-stone-900 dark:text-stone-100">{r.title}</span>
                   {r.favorite === 1 ? <span aria-label="Favorite" className="text-amber-500">★</span> : null}
                 </div>
-                {r.summary ? <p className="mt-1 line-clamp-2 text-sm text-stone-600">{r.summary}</p> : null}
-                <p className="mt-2 text-xs text-stone-600">
+                {r.summary ? <p className="mt-1 line-clamp-2 text-sm text-stone-600 dark:text-stone-400">{r.summary}</p> : null}
+                <p className="mt-2 text-xs text-stone-600 dark:text-stone-400">
                   <Macros recipe={r} />
                 </p>
-                <p className="mt-1 text-xs text-stone-500">
+                <p className="mt-1 text-xs text-stone-500 dark:text-stone-400">
                   {ORIGINS[r.origin] || r.origin}
                   {r.shelf_count > 0 ? ` · on ${r.shelf_count} shelf${r.shelf_count === 1 ? "" : "s"}` : ""}
                   {r.meal_count > 0 ? ` · linked to ${r.meal_count} meal${r.meal_count === 1 ? "" : "s"}` : ""}
@@ -545,7 +545,7 @@ function RecipeDetail({ id, onBack, onEdit, onChanged, reportError }) {
   }, [id, reportError]);
   useEffect(load, [load]);
 
-  if (recipe === undefined) return <p className="text-sm text-stone-500">Loading recipe…</p>;
+  if (recipe === undefined) return <p className="text-sm text-stone-500 dark:text-stone-400">Loading recipe…</p>;
   if (recipe === null) {
     return (
       <div className="space-y-3">
@@ -563,16 +563,16 @@ function RecipeDetail({ id, onBack, onEdit, onChanged, reportError }) {
         Back to recipes
       </button>
       <header className="space-y-1">
-        <h2 className="text-2xl font-semibold text-stone-900">{recipe.title}</h2>
-        {recipe.summary ? <p className="text-stone-700">{recipe.summary}</p> : null}
-        <p className="text-sm text-stone-600">
+        <h2 className="text-2xl font-semibold text-stone-900 dark:text-stone-100">{recipe.title}</h2>
+        {recipe.summary ? <p className="text-stone-700 dark:text-stone-300">{recipe.summary}</p> : null}
+        <p className="text-sm text-stone-600 dark:text-stone-400">
           {ORIGINS[recipe.origin] || recipe.origin} · serves {recipe.servings}
           {recipe.prep_min !== null ? ` · prep ${recipe.prep_min} min` : ""}
           {recipe.cook_min !== null ? ` · cook ${recipe.cook_min} min` : ""}
         </p>
-        <p className="text-sm text-stone-700">
+        <p className="text-sm text-stone-700 dark:text-stone-300">
           Per serving: <Macros recipe={recipe} />
-          {recipe.nutrition_basis ? <span className="text-stone-500"> ({BASES[recipe.nutrition_basis]})</span> : null}
+          {recipe.nutrition_basis ? <span className="text-stone-500 dark:text-stone-400"> ({BASES[recipe.nutrition_basis]})</span> : null}
         </p>
       </header>
 
@@ -619,13 +619,13 @@ function RecipeDetail({ id, onBack, onEdit, onChanged, reportError }) {
         {recipe.shelves.length ? (
           <ul className="mt-1 flex flex-wrap gap-2">
             {recipe.shelves.map((s) => (
-              <li key={s.id} className="rounded-full bg-stone-100 px-3 py-0.5 text-sm">
+              <li key={s.id} className="rounded-full bg-stone-100 dark:bg-stone-800 px-3 py-0.5 text-sm">
                 {s.name}
               </li>
             ))}
           </ul>
         ) : (
-          <p className="text-sm text-stone-500">Not on a shelf.</p>
+          <p className="text-sm text-stone-500 dark:text-stone-400">Not on a shelf.</p>
         )}
       </section>
 
@@ -638,7 +638,7 @@ function RecipeDetail({ id, onBack, onEdit, onChanged, reportError }) {
             ))}
           </ul>
         ) : (
-          <p className="text-sm text-stone-500">No ingredients yet.</p>
+          <p className="text-sm text-stone-500 dark:text-stone-400">No ingredients yet.</p>
         )}
       </section>
 
@@ -651,7 +651,7 @@ function RecipeDetail({ id, onBack, onEdit, onChanged, reportError }) {
             ))}
           </ol>
         ) : (
-          <p className="text-sm text-stone-500">No steps yet.</p>
+          <p className="text-sm text-stone-500 dark:text-stone-400">No steps yet.</p>
         )}
       </section>
 
@@ -781,7 +781,7 @@ function RecipeForm({ id, initial, shelves, onDone, onCancel, reportError }) {
 
       <fieldset className="space-y-2">
         <legend className="text-sm font-medium">Nutrition per serving</legend>
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-5">
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
           <label className="block text-sm">
             Calories
             <input className={field} inputMode="numeric" value={form.kcal} onChange={(e) => set({ kcal: e.target.value })} />
@@ -798,7 +798,7 @@ function RecipeForm({ id, initial, shelves, onDone, onCancel, reportError }) {
             Fat (g)
             <input className={field} inputMode="decimal" value={form.fat_g} onChange={(e) => set({ fat_g: e.target.value })} />
           </label>
-          <label className="block text-sm">
+          <label className="col-span-2 block text-sm sm:col-span-4">
             Numbers come from
             <select className={field} value={form.nutrition_basis} onChange={(e) => set({ nutrition_basis: e.target.value })}>
               <option value="">Not set</option>
@@ -861,26 +861,26 @@ function MealPicker({ onPick, onCancel }) {
   return (
     <section aria-label="Start from a health-log entry" className="space-y-3">
       <h2 className="text-xl font-semibold">Start from a health-log entry</h2>
-      <p className="text-sm text-stone-600">Pick a meal you logged. This app only reads your health log; it never changes it.</p>
-      {state.status === "loading" ? <p className="text-sm text-stone-500">Loading your meals…</p> : null}
+      <p className="text-sm text-stone-600 dark:text-stone-400">Pick a meal you logged. This app only reads your health log; it never changes it.</p>
+      {state.status === "loading" ? <p className="text-sm text-stone-500 dark:text-stone-400">Loading your meals…</p> : null}
       {state.status === "error" ? (
         <Banner tone="error">
           Your health log is not available to this app ({state.message}). Install the Health Log sample, or check that this app may read it.
         </Banner>
       ) : null}
-      {state.status === "ready" && state.meals.length === 0 ? <p className="text-sm text-stone-600">No meals logged yet.</p> : null}
+      {state.status === "ready" && state.meals.length === 0 ? <p className="text-sm text-stone-600 dark:text-stone-400">No meals logged yet.</p> : null}
       {state.status === "ready" ? (
-        <ul className="divide-y divide-stone-200 rounded-md border border-stone-200 bg-white">
+        <ul className="divide-y divide-stone-200 rounded-md border border-stone-200 bg-white dark:divide-stone-700 dark:border-stone-700 dark:bg-stone-900">
           {state.meals.map((m) => (
             <li key={m.id} className="flex items-center justify-between gap-3 p-3">
               <div className="text-sm">
                 <div className="font-medium">{m.name}</div>
-                <div className="text-stone-600">
+                <div className="text-stone-600 dark:text-stone-400">
                   {m.day} · {m.slot} · {m.kcal} kcal
                   {state.linked.has(m.id) ? " · already has a recipe" : ""}
                 </div>
               </div>
-              <button className={btnPlain} aria-label={`Use ${m.name} on ${m.day}`} onClick={() => onPick(m)}>
+              <button className={`${btnPlain} shrink-0 whitespace-nowrap`} aria-label={`Use ${m.name} on ${m.day}`} onClick={() => onPick(m)}>
                 Use this meal
               </button>
             </li>
@@ -923,7 +923,7 @@ function ShelfManager({ shelves, onChanged, onBack, reportError }) {
           Add shelf
         </button>
       </form>
-      <ul className="divide-y divide-stone-200 rounded-md border border-stone-200 bg-white">
+      <ul className="divide-y divide-stone-200 rounded-md border border-stone-200 bg-white dark:divide-stone-700 dark:border-stone-700 dark:bg-stone-900">
         {shelves.map((s) => (
           <li key={s.id} className="flex items-center justify-between gap-2 p-3 text-sm">
             {renaming && renaming.id === s.id ? (
@@ -946,7 +946,7 @@ function ShelfManager({ shelves, onChanged, onBack, reportError }) {
             ) : (
               <>
                 <span>
-                  {s.name} <span className="text-stone-500">({s.recipe_count})</span>
+                  {s.name} <span className="text-stone-500 dark:text-stone-400">({s.recipe_count})</span>
                 </span>
                 <span className="flex gap-2">
                   <button className={btnPlain} aria-label={`Rename ${s.name}`} onClick={() => setRenaming({ id: s.id, name: s.name })}>
@@ -960,9 +960,9 @@ function ShelfManager({ shelves, onChanged, onBack, reportError }) {
             )}
           </li>
         ))}
-        {shelves.length === 0 ? <li className="p-3 text-sm text-stone-500">No shelves yet.</li> : null}
+        {shelves.length === 0 ? <li className="p-3 text-sm text-stone-500 dark:text-stone-400">No shelves yet.</li> : null}
       </ul>
-      <p className="text-xs text-stone-500">Deleting a shelf keeps its recipes; they just come off the shelf.</p>
+      <p className="text-xs text-stone-500 dark:text-stone-400">Deleting a shelf keeps its recipes; they just come off the shelf.</p>
       <button className={btnPlain} onClick={onBack}>
         Back to recipes
       </button>
@@ -1022,7 +1022,7 @@ export default function App() {
   const toList = () => setRoute({ name: "list" });
 
   let screen;
-  if (boot.status === "loading") screen = <p className="text-sm text-stone-500">Opening your recipe book…</p>;
+  if (boot.status === "loading") screen = <p className="text-sm text-stone-500 dark:text-stone-400">Opening your recipe book…</p>;
   else if (boot.status === "error") {
     screen = <Banner tone="error">Could not open your recipe book: {boot.message}</Banner>;
   } else if (route.name === "detail") {
@@ -1068,7 +1068,7 @@ export default function App() {
   }
 
   return (
-    <main className="mx-auto max-w-3xl space-y-4 p-4 text-stone-900">
+    <main className="mx-auto max-w-3xl space-y-4 p-4 text-stone-900 dark:text-stone-100">
       <h1 className="text-3xl font-bold">Recipes</h1>
       {storageFull ? (
         <Banner>

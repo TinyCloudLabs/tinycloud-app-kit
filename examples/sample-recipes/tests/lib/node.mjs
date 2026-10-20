@@ -1,18 +1,18 @@
 // Starts a throwaway native tinycloud-node (no Docker) on a free port with a
-// private temp data dir. Binary: $TC_NODE_BIN (a build of tinycloud-node). Tests that
-// need a node call `nodeSkipReason()` and skip, with that message, when it is unset or
-// missing. Everything is deleted on stop(); only the process started here is killed.
+// private temp data dir. The binary is a prebuilt `tinycloud` (tinycloud-node release
+// build) named by $TC_NODE_BIN. Everything is deleted on stop().
 import { spawn } from "node:child_process";
 import { mkdtempSync, rmSync, existsSync, writeFileSync } from "node:fs";
 import { createServer } from "node:net";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
-/** undefined when a node binary is available, else why the node-backed tests are skipped. */
+
+/** Why node-backed tests cannot run here, or undefined when they can. */
 export function nodeSkipReason() {
   const bin = process.env.TC_NODE_BIN;
-  if (!bin) return "TC_NODE_BIN is not set: set it to a tinycloud-node binary to run the node-backed tests";
-  if (!existsSync(bin)) return `TC_NODE_BIN=${bin} does not exist`;
+  if (!bin) return "TC_NODE_BIN is not set (path to a prebuilt tinycloud-node `tinycloud` binary); skipping node-backed tests";
+  if (!existsSync(bin)) return `TC_NODE_BIN=${bin} does not exist; skipping node-backed tests`;
   return undefined;
 }
 
