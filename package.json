@@ -4,6 +4,8 @@
   "type": "module",
   "scripts": {
     "lint": "node scripts/lint.mjs",
+    "okf:check": "node scripts/okf.mjs check examples/*/knowledge --manifest",
+    "test": "node scripts/okf-test.mjs",
     "build:site": "node scripts/build-site.mjs"
   }
 }

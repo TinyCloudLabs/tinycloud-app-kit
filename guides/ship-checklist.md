@@ -10,10 +10,15 @@ Author the manifest and knowledge bundle, then validate them:
 
 ```bash
 npm run lint
+node scripts/okf.mjs generate manifest.json --sql schema.sql --out knowledge/
+node scripts/okf.mjs check knowledge/ --manifest
 ```
 
 The linter checks manifest JSON, `knowledge` pointers, and SQL migration
-capabilities. Fix every error before moving on.
+capabilities. The OKF checker verifies the knowledge bundle and that every
+`resource:` is covered by a manifest permission (see
+[Generate App Knowledge](generate-knowledge.md)). Fix every error before moving
+on.
 
 ## 2. Scaffold and implement
 

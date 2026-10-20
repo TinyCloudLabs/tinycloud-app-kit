@@ -1,22 +1,15 @@
 ---
-type: TinyCloud App
-title: Minimal App
-description: A TinyCloud app with one app-scoped KV namespace.
-tinycloud:
-  app: com.example.minimal
-  profile: tinycloud.app.v1
-  containsSecretValue: false
+okf_version: "0.2"
 ---
 
-# Minimal App
+# App
 
-Minimal App stores user preferences in KV under `settings/*`.
+* [Minimal App](app.md) - A TinyCloud app with one app-scoped KV namespace.
 
-## Resources
+# KV prefixes
 
-- [KV](kv.md) - User preference documents.
+* [settings](kv/settings.md) - User preferences stored as JSON documents.
 
-## Agent Notes
+# History
 
-- Preserve unknown JSON fields in settings documents.
-- Do not delete settings unless the user explicitly asks.
+* [Update log](log.md) - Dated history of changes to this bundle.

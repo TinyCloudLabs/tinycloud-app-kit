@@ -52,6 +52,29 @@
     "knowledge": {
       "$ref": "#/$defs/knowledgePointer"
     },
+    "forked_from": {
+      "type": "object",
+      "description": "Where this copy of the app came from. Written when an app is forked or installed as a template; the original publisher's manifest does not carry it.",
+      "additionalProperties": true,
+      "required": ["app_id", "source", "commit"],
+      "properties": {
+        "app_id": {
+          "type": "string",
+          "minLength": 1,
+          "description": "app_id of the app this copy was forked from."
+        },
+        "source": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Where the original can be fetched, for example a git URL."
+        },
+        "commit": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Exact revision of the original that this copy started from."
+        }
+      }
+    },
     "permissions": {
       "type": "array",
       "items": { "$ref": "#/$defs/permission" }

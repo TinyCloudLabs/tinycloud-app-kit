@@ -2,10 +2,19 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://schemas.tinycloud.xyz/app-knowledge-frontmatter/v1.json",
   "title": "TinyCloud App Knowledge Frontmatter v1",
+  "description": "Frontmatter of a concept document in an app's OKF v0.2 knowledge bundle. index.md and log.md are reserved: they carry no frontmatter, except that the bundle-root index.md may hold only okf_version (validate that with `scripts/okf.mjs check`, not this schema).",
   "type": "object",
   "additionalProperties": true,
-  "required": ["type", "title"],
+  "required": [
+    "type",
+    "title"
+  ],
   "properties": {
+    "okf_version": {
+      "type": "string",
+      "const": "0.2",
+      "description": "OKF version the bundle targets. Only valid in the bundle-root index.md frontmatter; listed here so tools that load every frontmatter block with this schema accept it."
+    },
     "type": {
       "type": "string",
       "enum": [
@@ -16,8 +25,12 @@
         "TinyCloud SQL",
         "TinyCloud DuckDB",
         "TinyCloud Secrets",
-        "TinyCloud Operations"
-      ]
+        "TinyCloud Operations",
+        "SQLite Table",
+        "SQLite View",
+        "KV Prefix"
+      ],
+      "description": "Concept type. OKF consumers tolerate unknown types; these are the ones this kit generates or knows."
     },
     "title": {
       "type": "string",
@@ -27,11 +40,14 @@
       "type": "string"
     },
     "resource": {
-      "type": "string"
+      "type": "string",
+      "description": "What the concept is bound to. For SQLite Table, SQLite View and KV Prefix concepts: tinycloud.<service>:<space>:<path>, the CLI --cap form without actions (space-relative, so bundles are portable between users)."
     },
     "tags": {
       "type": "array",
-      "items": { "type": "string" }
+      "items": {
+        "type": "string"
+      }
     },
     "timestamp": {
       "type": "string",
@@ -41,10 +57,19 @@
       "type": "object",
       "additionalProperties": true,
       "properties": {
-        "app": { "type": "string" },
+        "app": {
+          "type": "string"
+        },
         "service": {
           "type": "string",
-          "enum": ["manifest", "kv", "sql", "duckdb", "secrets", "operations"]
+          "enum": [
+            "manifest",
+            "kv",
+            "sql",
+            "duckdb",
+            "secrets",
+            "operations"
+          ]
         },
         "profile": {
           "type": "string",
@@ -52,13 +77,128 @@
         },
         "sensitivity": {
           "type": "string",
-          "enum": ["public", "user-data", "private", "secret-reference", "derived", "ephemeral"]
+          "enum": [
+            "public",
+            "user-data",
+            "private",
+            "secret-reference",
+            "derived",
+            "ephemeral"
+          ]
         },
         "containsSecretValue": {
           "type": "boolean",
           "const": false
         }
       }
+    },
+    "table": {
+      "type": "string",
+      "description": "SQLite Table concepts: the table name inside the database named by resource."
+    },
+    "view": {
+      "type": "string",
+      "description": "SQLite View concepts: the view name inside the database named by resource."
+    },
+    "generated": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": [
+        "by"
+      ],
+      "properties": {
+        "by": {
+          "type": "string"
+        },
+        "at": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "description": "OKF generated: who or what produced the content (actor convention <producer>/<version>, human:<id>, process:<id>)."
+    },
+    "forked_from": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": [
+        "app_id",
+        "source",
+        "commit"
+      ],
+      "properties": {
+        "app_id": {
+          "type": "string"
+        },
+        "source": {
+          "type": "string"
+        },
+        "commit": {
+          "type": "string"
+        }
+      },
+      "description": "TinyCloud App concepts: copied from the manifest forked_from."
     }
-  }
+  },
+  "allOf": [
+    {
+      "if": {
+        "required": [
+          "type"
+        ],
+        "properties": {
+          "type": {
+            "enum": [
+              "SQLite Table",
+              "SQLite View",
+              "KV Prefix"
+            ]
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "resource"
+        ],
+        "properties": {
+          "resource": {
+            "pattern": "^tinycloud\\.[a-z0-9_-]+:[^:]+:.*$"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "required": [
+          "type"
+        ],
+        "properties": {
+          "type": {
+            "const": "SQLite Table"
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "table"
+        ]
+      }
+    },
+    {
+      "if": {
+        "required": [
+          "type"
+        ],
+        "properties": {
+          "type": {
+            "const": "SQLite View"
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "view"
+        ]
+      }
+    }
+  ]
 }

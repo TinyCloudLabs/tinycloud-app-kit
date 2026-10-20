@@ -1,0 +1,75 @@
+{
+  "manifest_version": 1,
+  "app_id": "com.example.workshop",
+  "name": "Workshop Log",
+  "description": "A woodworking shop log: projects, work sessions, materials, purchases, cut lists, tool maintenance and project photos.",
+  "space": "applications",
+  "defaults": false,
+  "knowledge": "knowledge/index.md",
+  "permissions": [
+    {
+      "service": "tinycloud.sql",
+      "path": "com.example.workshop/shop_log",
+      "skipPrefix": true,
+      "actions": [
+        "read",
+        "write",
+        "schema"
+      ],
+      "description": "The shop log database: projects, sessions, materials, purchases, cut lists and tool upkeep."
+    },
+    {
+      "service": "tinycloud.kv",
+      "path": "photos/",
+      "actions": [
+        "get",
+        "put",
+        "list"
+      ],
+      "description": "Project photos, referenced from project_photo rows."
+    },
+    {
+      "service": "tinycloud.kv",
+      "path": "exports/latest.json",
+      "actions": [
+        "get",
+        "put"
+      ],
+      "description": "The most recent full export of the log, as one JSON document."
+    },
+    {
+      "service": "tinycloud.kv",
+      "path": "knowledge/",
+      "actions": [
+        "get",
+        "put",
+        "list"
+      ],
+      "description": "This app's OKF knowledge bundle."
+    },
+    {
+      "service": "tinycloud.sql",
+      "path": "com.example.lumberyard/price_book",
+      "skipPrefix": true,
+      "actions": [
+        "read"
+      ],
+      "description": "Read the lumberyard app's price book to fill in purchase costs. Read only."
+    },
+    {
+      "service": "tinycloud.kv",
+      "path": "com.example.lumberyard/catalog/",
+      "skipPrefix": true,
+      "actions": [
+        "get",
+        "list"
+      ],
+      "description": "Read the lumberyard app's catalog entries. Read only."
+    }
+  ],
+  "forked_from": {
+    "app_id": "com.example.workshop-upstream",
+    "source": "https://example.com/apps/workshop-log.git",
+    "commit": "4f2a9c1d0e7b3a5c6d8e9f001a2b3c4d5e6f7a8b"
+  }
+}

@@ -89,11 +89,29 @@ calls target a SQLite database named `default`; `tc.sql.execute(...)` and
 The default SQL grant covers `read` and `write`, but not schema changes. Apps
 that run migrations still need `tinycloud.sql/schema`.
 
+## Forks
+
+An app copied from another app records its origin with `forked_from`:
+
+```json
+{
+  "forked_from": {
+    "app_id": "com.example.notes",
+    "source": "https://example.com/notes.git",
+    "commit": "4f2a9c1d0e7b3a5c6d8e9f001a2b3c4d5e6f7a8b"
+  }
+}
+```
+
+All three fields are required strings. `scripts/okf.mjs generate` copies it into
+`app.md`.
+
 ## Review Checklist
 
 - `app_id` is stable and namespace-like.
 - `description` explains what the app does, not just what it is called.
 - `knowledge` is either `true` or a `knowledge/*.md` root path.
+- `node scripts/okf.mjs check knowledge/ --manifest` passes.
 - The author understands what default KV/SQL capabilities already grant.
 - Secret resources describe references only.
 - Resource descriptions are specific enough for an agent to avoid guessing.

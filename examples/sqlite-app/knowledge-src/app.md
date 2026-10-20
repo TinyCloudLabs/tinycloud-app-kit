@@ -1,14 +1,3 @@
----
-type: TinyCloud Operations
-title: Operations
-description: Install and repair notes.
-tinycloud:
-  app: com.example.notes
-  service: operations
-  profile: tinycloud.app.v1
-  containsSecretValue: false
----
-
 # Operations
 
 ## Install
@@ -24,3 +13,8 @@ app registration, then use cheap readiness checks.
 
 The SQL index is derived from KV documents. If the index is corrupt, rebuild it
 from `documents/*`.
+
+## Secrets
+
+If the optional `model-api-key` secret is missing, disable summaries instead of
+blocking note editing. Never write plaintext secret values into this bundle.

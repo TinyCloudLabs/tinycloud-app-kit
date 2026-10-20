@@ -51,6 +51,15 @@ for (const manifestPath of walk(join(root, "examples"), (p) => p.endsWith("manif
     }
   }
 
+  if (manifest.forked_from !== undefined) {
+    const from = manifest.forked_from;
+    for (const key of ["app_id", "source", "commit"]) {
+      if (from === null || typeof from !== "object" || typeof from[key] !== "string" || from[key] === "") {
+        fail(`${relative(root, manifestPath)} forked_from.${key} must be a non-empty string`);
+      }
+    }
+  }
+
   for (const sql of manifest.resources?.sql ?? []) {
     const capabilities = new Set(sql.capabilities ?? []);
     const hasMigrations = Array.isArray(sql.migrations) && sql.migrations.length > 0;
