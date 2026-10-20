@@ -1,0 +1,16 @@
+{
+  "manifest_version": 1,
+  "app_id": "com.example.broken",
+  "name": "Broken Bundle",
+  "description": "A deliberately non-conformant bundle: the okf test expects exactly three named errors.",
+  "defaults": false,
+  "knowledge": "knowledge/index.md",
+  "permissions": [
+    {
+      "service": "tinycloud.kv",
+      "path": "notes/",
+      "actions": ["get", "put", "list"],
+      "description": "Notes."
+    }
+  ]
+}

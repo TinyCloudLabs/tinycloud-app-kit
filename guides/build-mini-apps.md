@@ -16,8 +16,8 @@ A TinyCloud mini app has three parts:
    needs.
 2. App code implements the browser experience, backend routes, storage, and
    delegation behavior.
-3. `knowledge/` explains app resources, schemas, secrets, and operations for
-   humans and agents.
+3. `knowledge/` is an OKF bundle that explains app resources (tables, views, KV
+   prefixes), secrets, and operations for humans and agents.
 
 The browser owns user identity and consent. The backend operates on user data
 only through delegated TinyCloud access. The app serves `/api/manifest` as its
@@ -56,8 +56,10 @@ the agent's DID.
 
 1. Scaffold a runnable app from `tinyboilerplate`.
 2. Keep the generated manifest explicit and app-scoped.
-3. Add or update the knowledge bundle for every resource category the app uses.
-4. Validate the manifest, knowledge links, and SQL migration capabilities.
+3. Generate the knowledge bundle (`node scripts/okf.mjs generate`) so every
+   table, view and KV prefix the app uses has a concept.
+4. Validate the manifest, the bundle (`node scripts/okf.mjs check`), and SQL
+   migration capabilities.
 5. Run smoke tests for build/routes/browser shell.
 6. Run a human-in-loop real-auth check before claiming OpenKey/WebAuthn and
    TinyCloud delegation work end to end.

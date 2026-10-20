@@ -22,13 +22,15 @@ Prioritize:
 
 - `manifest.json` validates against the v1 schema.
 - `knowledge` is either `true` or a `knowledge/*.md` root path.
-- `knowledge/index.md` explains the app without requiring traversal.
+- `knowledge/index.md` lists every concept and holds no prose; `app.md` explains
+  the app. `node scripts/okf.mjs check knowledge/ --manifest` passes.
 - Missing `defaults` is treated as `true`; explicit permissions do not duplicate
   default app-scoped KV/SQLite grants without a reason.
-- Category files exist only for categories in use.
-- Secret files document references, consumers, and rotation, not values.
-- SQL files identify databases, tables, derived state, and mutation rules.
-- KV files identify prefixes, value shape, lifecycle, and deletion policy.
+- Concepts exist only for resources in use.
+- Secrets in `app.md` list names, consumers, and rotation, not values.
+- Table and view concepts identify the database, columns, derived state, and
+  mutation rules.
+- KV concepts identify prefixes, value shape, lifecycle, and deletion policy.
 - SQL resources that run `CREATE`, `ALTER`, `DROP`, or index DDL request
   `tinycloud.sql/schema`.
 - The database named in the manifest matches the database used by SDK calls.

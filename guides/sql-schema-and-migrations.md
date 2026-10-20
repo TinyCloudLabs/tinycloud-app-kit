@@ -198,7 +198,8 @@ talk about "your TinyCloud storage".
 
 ## Materialized Indexes
 
-If a SQLite table is a cache, say so in `knowledge/sql.md`.
+If a SQLite table is a cache, say so in the table's concept (`knowledge/tables/<table>.md`, via a comment above
+the `CREATE TABLE` or a `<!-- keep -->` block).
 
 ```md
 | Table | Purpose | Agent Notes |

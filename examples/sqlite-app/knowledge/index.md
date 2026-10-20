@@ -1,21 +1,19 @@
 ---
-type: TinyCloud App
-title: Notes
-description: Notes with KV documents and SQLite search metadata.
-tinycloud:
-  app: com.example.notes
-  profile: tinycloud.app.v1
-  containsSecretValue: false
+okf_version: "0.2"
 ---
 
-# Notes
+# App
 
-Notes stores user-authored documents in KV and derived search metadata in one
-SQLite database.
+* [Notes](app.md) - Notes with KV documents and SQLite search metadata.
 
-## Resources
+# Tables
 
-- [KV](kv.md) - Note documents under `documents/*`.
-- [SQL](sql.md) - Search metadata in `main`.
-- [Secrets](secrets.md) - Optional model provider key.
-- [Operations](operations.md) - Install and repair notes.
+* [note_index](tables/note_index.md) - Table note_index: id, title, updated_at, summary (4 columns).
+
+# KV prefixes
+
+* [documents](kv/documents.md) - User-authored note documents.
+
+# History
+
+* [Update log](log.md) - Dated history of changes to this bundle.
