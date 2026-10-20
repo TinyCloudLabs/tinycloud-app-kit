@@ -1,7 +1,7 @@
 ---
 type: "KV Prefix"
 title: prefs/
-description: "Read and change the app's settings (sort order, last shelf)."
+description: "Read and change the app's one settings file (sort order, last shelf)."
 resource: tinycloud.kv:applications:xyz.tinycloud.sample.recipes/prefs/
 generated: { by: tinycloud-app-kit/okf }
 tinycloud:
@@ -11,7 +11,7 @@ tinycloud:
   containsSecretValue: false
 ---
 
-Read and change the app's settings (sort order, last shelf).
+Read and change the app's one settings file (sort order, last shelf).
 
 # Keys
 
@@ -19,7 +19,7 @@ Every key beginning with `xyz.tinycloud.sample.recipes/prefs/` in space `applica
 
 # Access
 
-The manifest grants `get`, `put`, `del`, `list`.
+The manifest grants `get`, `put`.
 
 <!-- keep -->
 ## Keys in use

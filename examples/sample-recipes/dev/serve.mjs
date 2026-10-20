@@ -5,11 +5,12 @@
 // manifest-scoped sessions, so the page never sees a key.
 // Add ?theme=dark or ?theme=light to the URL to force a colour scheme (default: the browser's).
 import { build } from "esbuild";
+import { randomBytes, timingSafeEqual } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { createServer } from "node:http";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { loadApp } from "./build.mjs";
+import { loadApp, SHARED } from "./build.mjs";
 import { freshStack } from "../tests/lib/stack.mjs";
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
@@ -93,27 +94,53 @@ const bundle = await build({
   format: "iife",
   platform: "browser",
   jsx: "automatic",
-  alias: { "@tinycloud/app": join(ROOT, "dev/browser-bridge.mjs") },
+  alias: { "@tinycloud/app": join(SHARED, "dev/browser-bridge.mjs") },
   define: { "process.env.NODE_ENV": '"development"' },
   logLevel: "silent",
 });
 const appJs = bundle.outputFiles[0].text;
 const tailwind = readFileSync(join(ROOT, "node_modules/@tailwindcss/browser/dist/index.global.js"));
-const html = `<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Recipes (sample)</title>
+const token = randomBytes(24).toString("hex");
+const html = `<!doctype html><html><head><meta charset="utf-8"><meta name="bridge-token" content="${token}"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Recipes (sample)</title>
 <script>{const t = new URLSearchParams(location.search).get("theme"); if (t === "dark" || (t !== "light" && matchMedia("(prefers-color-scheme: dark)").matches)) document.documentElement.classList.add("dark");}</script>
 <style type="text/tailwindcss">@custom-variant dark (&:where(.dark, .dark *));</style>
 <script src="/tailwind.js"></script></head><body class="bg-stone-50 dark:bg-stone-950"><div id="root"></div><script src="/app.js"></script></body></html>`;
 
+// The /bridge endpoint drives a node session, so it is not open to arbitrary web pages: it is bound to
+// 127.0.0.1, answers only for this server's own Host/Origin, and needs a per-run random token that only
+// the served page can read (same-origin; no CORS headers are ever sent). Same rules as the Health Log sample.
+const ownHosts = new Set([`127.0.0.1:${port}`, `localhost:${port}`]);
+const tokenOk = (given) => {
+  const a = Buffer.from(String(given ?? ""));
+  const b = Buffer.from(token);
+  return a.length === b.length && timingSafeEqual(a, b);
+};
+const MAX_BODY = 2_000_000;
+
 const server = createServer(async (req, res) => {
-  const send = (code, type, body) => { res.writeHead(code, { "content-type": type }); res.end(body); };
+  const send = (code, type, body) => { res.writeHead(code, { "content-type": type, "cache-control": "no-store" }); res.end(body); };
+  if (!ownHosts.has(req.headers.host ?? "")) return send(403, "text/plain", "forbidden host"); // DNS rebinding
   const path = (req.url ?? "").split("?")[0];
   if (req.method === "GET" && path === "/") return send(200, "text/html", html);
   if (req.method === "GET" && path === "/app.js") return send(200, "text/javascript", appJs);
   if (req.method === "GET" && path === "/tailwind.js") return send(200, "text/javascript", tailwind);
   if (req.method === "POST" && path === "/bridge") {
+    const origin = req.headers.origin;
+    if (origin !== undefined && ![...ownHosts].some((h) => origin === `http://${h}`)) return send(403, "text/plain", "forbidden origin");
+    if (!tokenOk(req.headers["x-bridge-token"])) return send(403, "text/plain", "bad token");
+    if (!String(req.headers["content-type"] ?? "").startsWith("application/json")) return send(415, "text/plain", "json only");
     let raw = "";
-    for await (const chunk of req) raw += chunk;
-    const { op, args: a } = JSON.parse(raw);
+    for await (const chunk of req) {
+      raw += chunk;
+      if (raw.length > MAX_BODY) return send(413, "text/plain", "too large");
+    }
+    let op, a;
+    try {
+      ({ op, args: a } = JSON.parse(raw));
+      if (typeof op !== "string" || a === null || typeof a !== "object") throw new Error("shape");
+    } catch {
+      return send(400, "text/plain", "bad request");
+    }
     const [svc, fn] = op.split(".");
     let out;
     if (svc === "kv" && fn === "get") out = await bridge.kv.get(a.key);

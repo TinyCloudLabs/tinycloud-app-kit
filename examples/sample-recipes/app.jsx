@@ -344,10 +344,13 @@ export function formFromMeal(meal) {
   };
 }
 
+// Plain decimal digits only: Number() would also accept "0x10", "1e3" and "Infinity".
+const PLAIN_NUMBER = /^(?:\d+\.?\d*|\.\d+)$/;
+
 function optionalNumber(text, label, { integer = false, min = 0, max = Infinity } = {}) {
   const trimmed = text.trim();
   if (trimmed === "") return { value: null };
-  const n = Number(trimmed);
+  const n = PLAIN_NUMBER.test(trimmed) ? Number(trimmed) : NaN;
   if (!Number.isFinite(n) || n < min || n > max || (integer && !Number.isInteger(n))) {
     return { error: `${label} must be ${integer ? "a whole number" : "a number"} between ${min} and ${max === Infinity ? "any value" : max}.` };
   }
@@ -358,8 +361,8 @@ export function validateForm(form) {
   const title = form.title.trim();
   if (!title) return { error: "Give the recipe a title." };
   if (title.length > 200) return { error: "The title is limited to 200 characters." };
-  const servings = Number(form.servings);
-  if (!Number.isFinite(servings) || servings <= 0) return { error: "Servings must be more than 0." };
+  const servings = PLAIN_NUMBER.test(form.servings.trim()) ? Number(form.servings.trim()) : NaN;
+  if (!Number.isFinite(servings) || servings <= 0) return { error: "Servings must be a number more than 0." };
   const numbers = {};
   for (const [key, label, opts] of [
     ["prep_min", "Prep minutes", { integer: true }],

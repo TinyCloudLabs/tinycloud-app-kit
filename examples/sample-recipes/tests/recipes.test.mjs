@@ -2,11 +2,12 @@
 // Health Log rows -> a recipe started from one of those meals -> read back.
 import assert from "node:assert/strict";
 import { after, before, describe, test } from "node:test";
-import { loadApp } from "./lib/build.mjs";
+import { loadApp } from "../dev/build.mjs";
 import { nodeSkipReason } from "./lib/node.mjs";
+import { sharedSkipReason } from "./lib/shared.mjs";
 import { freshStack } from "./lib/stack.mjs";
 
-const skip = nodeSkipReason();
+const skip = nodeSkipReason() ?? sharedSkipReason();
 describe("recipes app logic on a local node", { skip }, () => {
   let stack;
   let app;

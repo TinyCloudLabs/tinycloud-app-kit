@@ -20,10 +20,9 @@ okf_version: "0.2"
 
 # KV prefixes
 
-* [prefs/](kv/prefs.md) - Read and change the app's settings (sort order, last shelf).
-* [app/](kv/app.md) - Read the installed copy of the app (code, schema).
+* [prefs/](kv/prefs.md) - Read and change the app's one settings file (sort order, last shelf).
+* [app/](kv/app.md) - Read the installed copy of the app's schema.
 * [knowledge/](kv/knowledge.md) - Read and update the app's knowledge bundle so an agent can pick up where you left off.
-* [xyz.tinycloud.sample.healthlog/knowledge/](kv/xyz-tinycloud-sample-healthlog-knowledge.md) - Read the Health Log's knowledge bundle to learn how its data is laid out.
 
 # History
 

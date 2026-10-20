@@ -2,12 +2,13 @@
 // dev shim to a real local node. Covers the recipe list and the flows around it.
 import assert from "node:assert/strict";
 import { after, before, describe, test } from "node:test";
-import { loadApp } from "./lib/build.mjs";
+import { loadApp } from "../dev/build.mjs";
 import { button, click, field, mount, set, submit, text, waitFor } from "./lib/dom.mjs";
 import { nodeSkipReason } from "./lib/node.mjs";
+import { sharedSkipReason } from "./lib/shared.mjs";
 import { freshStack } from "./lib/stack.mjs";
 
-const skip = nodeSkipReason();
+const skip = nodeSkipReason() ?? sharedSkipReason();
 describe("jsdom render on a local node", { skip }, () => {
   let stack;
   let app;
@@ -200,6 +201,34 @@ describe("jsdom render on a local node", { skip }, () => {
       assert.match(items.find((li) => li.textContent.includes("Oats")).textContent, /already has a recipe/);
       assert.doesNotMatch(items.find((li) => li.textContent.includes("Salmon")).textContent, /already has a recipe/);
       await click(button("Back to recipes"));
+    });
+  });
+
+  describe("invalid numbers are surfaced, never dropped", () => {
+    test("a malformed number shows an alert, keeps the form and writes nothing", async () => {
+      await click(button("Add recipe"));
+      await waitFor(() => field("Title"), { what: "add form" });
+      await set(field("Title"), "Number check");
+      const before = await stack.recipes.sql.query("recipes", "SELECT COUNT(*) FROM recipe");
+      for (const [label, value, message] of [
+        ["Calories", "1e3", /Calories must be a whole number/],
+        ["Protein (g)", "0x10", /Protein must be a number/],
+        ["Servings", "two", /Servings must be a number more than 0/],
+        ["Prep minutes", "-5", /Prep minutes must be a whole number/],
+      ]) {
+        const before = field(label).value;
+        await set(field("Numbers come from"), "estimate");
+        await set(field(label), value);
+        await submit(document.querySelector("form[aria-label='Add recipe']"));
+        const alert = await waitFor(() => document.querySelector("[role='alert']"), { what: `alert for ${label}` });
+        assert.match(alert.textContent, message, `${label}=${value}`);
+        assert.equal(field("Title").value, "Number check", "the form keeps what was typed");
+        assert.equal(field(label).value, value, "the bad value is still there, not silently dropped");
+        await set(field(label), before);
+      }
+      const after = await stack.recipes.sql.query("recipes", "SELECT COUNT(*) FROM recipe");
+      assert.deepEqual(after.rows, before.rows, "nothing was written");
+      await click(button("Cancel"));
     });
   });
 

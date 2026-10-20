@@ -10,8 +10,8 @@ import { TinyCloudNode } from "@tinycloud/node-sdk";
 import { randomBytes } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import { connect } from "../../dev/shim.mjs";
-import { ROOT } from "./build.mjs";
+import { loadShim } from "./shared.mjs";
+import { ROOT } from "../../dev/build.mjs";
 import { startNode } from "./node.mjs";
 
 const read = (p) => readFileSync(join(ROOT, p), "utf8");
@@ -42,6 +42,7 @@ async function appSession({ host, privateKey, manifest }) {
 }
 
 export async function freshStack() {
+  const { connect } = await loadShim();
   const node = await startNode();
   const privateKey = randomBytes(32).toString("hex");
 

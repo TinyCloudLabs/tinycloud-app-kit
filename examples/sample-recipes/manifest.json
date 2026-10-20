@@ -13,40 +13,48 @@
     {
       "service": "tinycloud.sql",
       "path": "recipes",
-      "actions": ["read", "write", "schema"],
+      "actions": [
+        "read",
+        "write",
+        "schema"
+      ],
       "description": "Read and change your recipes, shelves and meal links (database xyz.tinycloud.sample.recipes/recipes). schema lets the app create its own tables on first open."
     },
     {
       "service": "tinycloud.kv",
       "path": "prefs/",
-      "actions": ["get", "put", "del", "list"],
-      "description": "Read and change the app's settings (sort order, last shelf)."
+      "actions": [
+        "get",
+        "put"
+      ],
+      "description": "Read and change the app's one settings file (sort order, last shelf)."
     },
     {
       "service": "tinycloud.kv",
       "path": "app/",
-      "actions": ["get", "list"],
-      "description": "Read the installed copy of the app (code, schema). The app cannot change its own code."
+      "actions": [
+        "get"
+      ],
+      "description": "Read the installed copy of the app's schema. The app cannot change its own code."
     },
     {
       "service": "tinycloud.kv",
       "path": "knowledge/",
-      "actions": ["get", "put", "list"],
+      "actions": [
+        "get",
+        "put",
+        "list"
+      ],
       "description": "Read and update the app's knowledge bundle so an agent can pick up where you left off."
     },
     {
       "service": "tinycloud.sql",
       "path": "xyz.tinycloud.sample.healthlog/healthlog",
-      "actions": ["read"],
+      "actions": [
+        "read"
+      ],
       "skipPrefix": true,
       "description": "Read your Health Log meals so you can start a recipe from one. Read only: this app cannot change your Health Log."
-    },
-    {
-      "service": "tinycloud.kv",
-      "path": "xyz.tinycloud.sample.healthlog/knowledge/",
-      "actions": ["get", "list"],
-      "skipPrefix": true,
-      "description": "Read the Health Log's knowledge bundle to learn how its data is laid out. Read only."
     }
   ]
 }

@@ -23,14 +23,14 @@ A small recipe book: shelves, recipes, and recipes started from a meal in the He
 * Foreign keys are declared but the node does not enforce them. To delete a recipe, delete its `recipe_shelf` and `meal_link` rows first, then the `recipe` row. To delete a shelf, delete its `recipe_shelf` rows first; its recipes stay.
 * `origin = 'from_meal'` means the recipe was started from a Health Log meal. Copy that meal's macros into the recipe, set `nutrition_basis = 'copied_from_meal'`, and add a `meal_link` row with `health_meal_id` set to the meal's `id` and the `meal_day`, `meal_name` and `meal_kcal` snapshot. One meal can be linked to a recipe only once.
 * Never write to `xyz.tinycloud.sample.healthlog/`. The grant is read only and the node refuses writes there. If a meal is missing, tell the user to log it in the Health Log.
-* Before you read the Health Log's data, read its own knowledge: `xyz.tinycloud.sample.healthlog/knowledge/index.md`.
+* Before you read the Health Log's data, read its own knowledge: `xyz.tinycloud.sample.healthlog/knowledge/index.md`. This app has no KV grant there, so an agent needs its own grant to read it.
 * If you change a table's columns, update that table's concept and add a dated line to `log.md`.
 
 # Resources
 
 * Tables: [recipe](/tables/recipe.md), [shelf](/tables/shelf.md), [recipe_shelf](/tables/recipe_shelf.md), [meal_link](/tables/meal_link.md)
 * Views: [recipe_card](/views/recipe_card.md), [shelf_overview](/views/shelf_overview.md)
-* KV prefixes: [prefs/](/kv/prefs.md), [app/](/kv/app.md), [knowledge/](/kv/knowledge.md), [xyz.tinycloud.sample.healthlog/knowledge/](/kv/xyz-tinycloud-sample-healthlog-knowledge.md)
+* KV prefixes: [prefs/](/kv/prefs.md), [app/](/kv/app.md), [knowledge/](/kv/knowledge.md)
 
 # Permissions
 
@@ -39,18 +39,16 @@ Space `applications`, app prefix `xyz.tinycloud.sample.recipes`. Each resource b
 | Resource | Actions | Why |
 | --- | --- | --- |
 | `tinycloud.sql:applications:xyz.tinycloud.sample.recipes/recipes` | read, write, schema | Read and change your recipes, shelves and meal links (database xyz.tinycloud.sample.recipes/recipes). schema lets the app create its own tables on first open. |
-| `tinycloud.kv:applications:xyz.tinycloud.sample.recipes/prefs/` | get, put, del, list | Read and change the app's settings (sort order, last shelf). |
-| `tinycloud.kv:applications:xyz.tinycloud.sample.recipes/app/` | get, list | Read the installed copy of the app (code, schema). The app cannot change its own code. |
+| `tinycloud.kv:applications:xyz.tinycloud.sample.recipes/prefs/` | get, put | Read and change the app's one settings file (sort order, last shelf). |
+| `tinycloud.kv:applications:xyz.tinycloud.sample.recipes/app/` | get | Read the installed copy of the app's schema. The app cannot change its own code. |
 | `tinycloud.kv:applications:xyz.tinycloud.sample.recipes/knowledge/` | get, put, list | Read and update the app's knowledge bundle so an agent can pick up where you left off. |
 | `tinycloud.sql:applications:xyz.tinycloud.sample.healthlog/healthlog` | read | Read your Health Log meals so you can start a recipe from one. Read only: this app cannot change your Health Log. |
-| `tinycloud.kv:applications:xyz.tinycloud.sample.healthlog/knowledge/` | get, list | Read the Health Log's knowledge bundle to learn how its data is laid out. Read only. |
 
 # Other apps' data
 
 These grants point at data owned by other apps:
 
 * `tinycloud.sql:applications:xyz.tinycloud.sample.healthlog/healthlog`: read (read only)
-* `tinycloud.kv:applications:xyz.tinycloud.sample.healthlog/knowledge/`: get, list (read only)
 
 # Getting access
 

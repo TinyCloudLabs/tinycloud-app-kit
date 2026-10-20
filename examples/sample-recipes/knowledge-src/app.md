@@ -17,5 +17,5 @@ description: A small recipe book. Shelves group recipes; a recipe can be started
 * Foreign keys are declared but the node does not enforce them. To delete a recipe, delete its `recipe_shelf` and `meal_link` rows first, then the `recipe` row. To delete a shelf, delete its `recipe_shelf` rows first; its recipes stay.
 * `origin = 'from_meal'` means the recipe was started from a Health Log meal. Copy that meal's macros into the recipe, set `nutrition_basis = 'copied_from_meal'`, and add a `meal_link` row with `health_meal_id` set to the meal's `id` and the `meal_day`, `meal_name` and `meal_kcal` snapshot. One meal can be linked to a recipe only once.
 * Never write to `xyz.tinycloud.sample.healthlog/`. The grant is read only and the node refuses writes there. If a meal is missing, tell the user to log it in the Health Log.
-* Before you read the Health Log's data, read its own knowledge: `xyz.tinycloud.sample.healthlog/knowledge/index.md`.
+* Before you read the Health Log's data, read its own knowledge: `xyz.tinycloud.sample.healthlog/knowledge/index.md`. This app has no KV grant there, so an agent needs its own grant to read it.
 * If you change a table's columns, update that table's concept and add a dated line to `log.md`.

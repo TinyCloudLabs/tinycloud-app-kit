@@ -5,23 +5,23 @@
   "files": [
     {
       "path": "app.jsx",
-      "sha256": "7c3692f94830aa3539700473df2e322301487a8ee2318fa94d3340c6d2cc08cd",
-      "size": 42451
+      "sha256": "08d4b9204e8265e4635265be5c06074133714b64520895a0de0c6059f330f1e8",
+      "size": 42684
     },
     {
       "path": "knowledge/app.md",
-      "sha256": "b5a5dbbd959e7a8646b6a868b1b6ab6e8382fea055105367f9fffcc925bc9511",
-      "size": 5042
+      "sha256": "930eff8b40d330e9b61240134340a7304220e9c961bc8cd47340b86c211b1dfb",
+      "size": 4742
     },
     {
       "path": "knowledge/index.md",
-      "sha256": "f21574b5855d8a15982f319b7e514de279369fcb268d38734598d9013a38401e",
-      "size": 1244
+      "sha256": "1631095d2e909ff5a49023aab0a5b4534e61b21b20ba228f89331ab4113fd591",
+      "size": 1077
     },
     {
       "path": "knowledge/kv/app.md",
-      "sha256": "a8c6d53a3697f45f66ff77a1231da198b74be5b2b0d3dbc49a551f3250a5f951",
-      "size": 608
+      "sha256": "243427ee1edd3d818148b1eee71ca836625640f1e37f2e6eac13cb7d1b5b050d",
+      "size": 588
     },
     {
       "path": "knowledge/kv/knowledge.md",
@@ -30,17 +30,12 @@
     },
     {
       "path": "knowledge/kv/prefs.md",
-      "sha256": "566571555158aa1dbb63fd20ae87cdc804fc3ad496e4d5beb7a11a306e10bcdc",
-      "size": 883
-    },
-    {
-      "path": "knowledge/kv/xyz-tinycloud-sample-healthlog-knowledge.md",
-      "sha256": "4263a1214276504eeea4f45b8a475cd1bb520812a35eee0d6299578a43d0a7d2",
-      "size": 865
+      "sha256": "2b163e547f86e8defb1a64a03c8ad0802c1bc12382a418c468d13ce3606133e2",
+      "size": 886
     },
     {
       "path": "knowledge/log.md",
-      "sha256": "330646faca2bda0bfdf1a106a7e4bbb598c60b8a60622f7431b002deb8b2fffe",
+      "sha256": "9584c1957ad017e7b9d341682c85015754a5e8f7227cec9303a8a4b597892482",
       "size": 121
     },
     {
@@ -75,8 +70,8 @@
     },
     {
       "path": "manifest.json",
-      "sha256": "20a13b7b5dfcc1efefb8503f7854f1367a554b05c4120479e9d153c799c9876c",
-      "size": 1961
+      "sha256": "978a6f43bfd430594b9b6df38f05b3a48f03218a05531b6117bc0e51afdd9b79",
+      "size": 1788
     },
     {
       "path": "schema.sql",
@@ -84,5 +79,5 @@
       "size": 5164
     }
   ],
-  "digest": "158c2524dcc1aa914f95392d42ae4a0f971cbf6349ec52a880fd66c97d74ef52"
+  "digest": "dae2e2059061aca2ed042f5349e431ee2b9275515230670b8b53e4f0a2cfc625"
 }

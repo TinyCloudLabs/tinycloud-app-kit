@@ -10,9 +10,10 @@
 import assert from "node:assert/strict";
 import { after, before, describe, test } from "node:test";
 import { nodeSkipReason } from "./lib/node.mjs";
+import { sharedSkipReason } from "./lib/shared.mjs";
 import { freshStack, HEALTH_DB, healthManifest, RECIPES_DB } from "./lib/stack.mjs";
 
-const skip = nodeSkipReason();
+const skip = nodeSkipReason() ?? sharedSkipReason();
 describe("cross-app permissions on a local node", { skip }, () => {
   const HEALTH = healthManifest.app_id;
   const HEALTH_ABS_DB = `/${HEALTH_DB}`; // leading "/": absolute path, reachable via skipPrefix grants
@@ -53,13 +54,12 @@ describe("cross-app permissions on a local node", { skip }, () => {
       assert.deepEqual(r.rows, [["2026-10-20", 420, 1]]);
     });
 
-    test("KV: it reads and lists the Health Log's knowledge/ prefix", async () => {
+    test("KV: the app asked for no KV access to the Health Log, so it gets none (reads refused by the bridge and the node)", async () => {
       const got = await stack.recipes.kv.get(`/${HEALTH}/knowledge/index.md`);
-      assert.equal(got.ok, true, JSON.stringify(got.error));
-      assert.equal(new TextDecoder().decode(got.bytes), "# Health Log\n");
+      assert.equal(got.error?.code, "PERMISSION_DENIED");
       const list = await stack.recipes.kv.list(`/${HEALTH}/knowledge/`);
-      assert.equal(list.ok, true, JSON.stringify(list.error));
-      assert.deepEqual(list.keys, [`/${HEALTH}/knowledge/index.md`]);
+      assert.equal(list.error?.code, "PERMISSION_DENIED");
+      refusedByNode(await stack.recipesNode.kv.get(`${HEALTH}/knowledge/index.md`));
     });
   });
 
@@ -105,7 +105,7 @@ describe("cross-app permissions on a local node", { skip }, () => {
       assert.deepEqual(await healthMeals(), [[mealId, "Lentil soup", 420]], "the Health Log's data is untouched");
     });
 
-    test("NODE: KV writes under the Health Log prefix are refused, even in the one prefix it may read", async () => {
+    test("NODE: KV writes and deletes under the Health Log prefix are refused", async () => {
       refusedByNode(await stack.recipesNode.kv.put(`${HEALTH}/knowledge/interop.md`, "hello"));
       refusedByNode(await stack.recipesNode.kv.put(`${HEALTH}/prefs/goals.json`, '{"kcal":1}'));
       refusedByNode(await stack.recipesNode.kv.delete(`${HEALTH}/knowledge/index.md`));

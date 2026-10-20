@@ -5,6 +5,7 @@
   "type": "module",
   "description": "Sample TinyCloud tiny app (app-type artifact): recipes, shelves, and recipes started from a Health Log meal",
   "scripts": {
+    "setup": "npm install --prefix ../sample-healthlog && npm install",
     "test": "node --test --test-concurrency=1 tests/*.test.mjs",
     "release": "node scripts/make-release.mjs",
     "knowledge": "node scripts/knowledge.mjs generate",

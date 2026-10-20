@@ -8,7 +8,8 @@ import { describe, test } from "node:test";
 import { fileURLToPath } from "node:url";
 import { resolveManifest, validateManifest } from "@tinycloud/node-sdk";
 import { buildRelease } from "../scripts/make-release.mjs";
-import { loadApp } from "./lib/build.mjs";
+import { loadApp } from "../dev/build.mjs";
+import { importSpecifiers, scanSource } from "../../sample-healthlog/tests/lib/scan.mjs";
 import { GENERATE_ARGS, okf, okfPath } from "../scripts/knowledge.mjs";
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
@@ -34,11 +35,10 @@ describe("manifest", () => {
       .map((r) => `${r.service} ${r.path} ${r.actions.map((a) => a.split("/")[1]).join(",")}`);
     assert.deepEqual(grants, [
       `tinycloud.sql ${APP}/recipes read,write,schema`,
-      `tinycloud.kv ${APP}/prefs/ get,put,del,list`,
-      `tinycloud.kv ${APP}/app/ get,list`,
+      `tinycloud.kv ${APP}/prefs/ get,put`,
+      `tinycloud.kv ${APP}/app/ get`,
       `tinycloud.kv ${APP}/knowledge/ get,put,list`,
       `tinycloud.sql ${HEALTH}/healthlog read`,
-      `tinycloud.kv ${HEALTH}/knowledge/ get,list`,
     ]);
   });
 
@@ -145,15 +145,12 @@ describe("schema and app agree", () => {
 });
 
 describe("sandbox rules for app.jsx", () => {
+  // Defence in depth only: the static scan (the Health Log sample's tests/lib/scan.mjs, one source of truth)
+  // catches honest mistakes and obvious escape hatches. It is NOT the security boundary: the sandbox CSP
+  // (opaque origin, connect-src 'none', no storage, no parent access) is, and the runner proves that (T5b).
   const src = read("app.jsx");
-  test("imports only react and the bridge", () => {
-    const specs = [...src.matchAll(/^import\s.*?from\s+"([^"]+)"/gm)].map((m) => m[1]);
-    assert.deepEqual([...new Set(specs)].sort(), ["@tinycloud/app", "react"]);
-    assert.ok(!/\bimport\s*\(/.test(src), "no dynamic import");
-  });
-
-  test("no network, eval, storage, cookies or direct DOM escape hatches", () => {
-    const banned = ["fetch(", "XMLHttpRequest", "WebSocket", "EventSource", "sendBeacon", "eval(", "new Function", "Function(", "localStorage", "sessionStorage", "indexedDB", "document.cookie", "importScripts", "postMessage", "window.parent", "window.top", "window.open", "dangerouslySetInnerHTML", "innerHTML", "<script", "<iframe", "<form action", "href=", "navigator.serviceWorker"];
-    for (const b of banned) assert.ok(!src.includes(b), `app.jsx must not use ${b}`);
+  test("app.jsx is clean under the shared static scan and imports only react and the bridge", () => {
+    assert.deepEqual(scanSource(src), []);
+    assert.deepEqual([...new Set(importSpecifiers(src))].sort(), ["@tinycloud/app", "react"]);
   });
 });
