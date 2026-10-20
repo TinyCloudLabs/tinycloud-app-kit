@@ -1,7 +1,7 @@
 ---
 type: "KV Prefix"
 title: prefs/
-description: "Read and change the app's settings (daily targets, units)."
+description: "Read and change the app's settings (daily calorie target)."
 resource: tinycloud.kv:applications:xyz.tinycloud.sample.healthlog/prefs/
 generated: { by: tinycloud-app-kit/okf }
 tinycloud:
@@ -11,7 +11,7 @@ tinycloud:
   containsSecretValue: false
 ---
 
-Read and change the app's settings (daily targets, units).
+Read and change the app's settings (daily calorie target).
 
 # Keys
 
@@ -19,7 +19,7 @@ Every key beginning with `xyz.tinycloud.sample.healthlog/prefs/` in space `appli
 
 # Access
 
-The manifest grants `get`, `put`, `del`, `list`.
+The manifest grants `get`, `put`.
 
 <!-- keep -->
 | Key | Content type | Description |

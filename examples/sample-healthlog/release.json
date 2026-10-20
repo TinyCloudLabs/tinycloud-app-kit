@@ -5,23 +5,23 @@
   "files": [
     {
       "path": "app.jsx",
-      "sha256": "db1a1cf9ac5b55a709966e77258ac7553aa7d50c7ecd12e37bb712c8fb2904d8",
-      "size": 23075
+      "sha256": "56075597ad5f7dcfcc027d2a105c275a7713f7fc0588cec5290d56ebfee2e83f",
+      "size": 25459
     },
     {
       "path": "knowledge/app.md",
-      "sha256": "5a8377ab22e200b1d72856cfecae7daedcefcc4b3c5f94d1ca493555a9a24266",
-      "size": 4087
+      "sha256": "3050818fd96e048e8c26bf1ec04c74b7c2681128d51e173cae2a2718257bb445",
+      "size": 4064
     },
     {
       "path": "knowledge/index.md",
-      "sha256": "d3ce59d3d19da9b2702b1874f5483ad0c0ffb89b7ed45899c774afb3a68802c1",
-      "size": 960
+      "sha256": "df4d75cd52928ffe059568093c60a84b105e542b005bf36e939516fed5eec7fc",
+      "size": 954
     },
     {
       "path": "knowledge/kv/app.md",
-      "sha256": "93077c1b8b18d8a494e635c1a714f3795e48a3a2fc5a2e88613c4fc33e95b9ed",
-      "size": 1303
+      "sha256": "1583fdefdf6261a8ce110d8de22843855f8393f760de9fa79c3491868924bd42",
+      "size": 1283
     },
     {
       "path": "knowledge/kv/knowledge.md",
@@ -30,13 +30,13 @@
     },
     {
       "path": "knowledge/kv/prefs.md",
-      "sha256": "f23bd8feea601d8c8c2e1d3c32c8ea7b9440e00ff2b8b365605652cfe4ff87a2",
-      "size": 846
+      "sha256": "0de88eb2cd8c2ad7302b84c2f6b972364d9e9354f15b70657349339167dd52e4",
+      "size": 831
     },
     {
       "path": "knowledge/log.md",
-      "sha256": "b702c927148883f08153287ca8c6c4b0882754bb260fbb47ccf08dfa1353baac",
-      "size": 163
+      "sha256": "7753435d03afe51c36023c596330c7f04c597319586b5b39d4cf8a675512b1d0",
+      "size": 263
     },
     {
       "path": "knowledge/tables/meal.md",
@@ -60,8 +60,8 @@
     },
     {
       "path": "manifest.json",
-      "sha256": "71237c66c4278f97961509ca422fc015c3c15143377a87396f32a2bc7ccd6019",
-      "size": 1511
+      "sha256": "0b6162faa784fa2698a50481b2edf6385f10cb7bba03183bfe3c2047a4d622df",
+      "size": 1458
     },
     {
       "path": "schema.sql",
@@ -69,5 +69,5 @@
       "size": 4114
     }
   ],
-  "digest": "c0e43a259ca2b01047605bcf11a076d8b1762dbc38f7df52fe4d3e15aed05484"
+  "digest": "f001d6618c535182c5a64cad1a18ace17d62ced635651ad8b2fba4d01161707c"
 }

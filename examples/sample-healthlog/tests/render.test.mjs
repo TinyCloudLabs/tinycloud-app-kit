@@ -6,15 +6,16 @@ import { JSDOM } from "jsdom";
 // --- browser globals, installed before React / recharts are imported -------------------------
 const dom = new JSDOM('<!doctype html><html><body><div id="root"></div></body></html>', { url: "https://app.invalid/", pretendToBeVisual: true });
 const { window } = dom;
-for (const key of ["window", "document", "HTMLElement", "HTMLInputElement", "HTMLSelectElement", "Element", "Node", "Event", "MouseEvent", "SVGElement", "getComputedStyle", "requestAnimationFrame", "cancelAnimationFrame", "MutationObserver"]) {
+for (const key of ["window", "document", "HTMLElement", "HTMLInputElement", "HTMLSelectElement", "Element", "Node", "Event", "MouseEvent", "FocusEvent", "SVGElement", "getComputedStyle", "requestAnimationFrame", "cancelAnimationFrame", "MutationObserver"]) {
   Object.defineProperty(globalThis, key, { value: key === "window" ? window : window[key], configurable: true, writable: true });
 }
 Object.defineProperty(globalThis, "navigator", { value: window.navigator, configurable: true });
-// recharts' ResponsiveContainer needs a size: report 600x240 for every observed element.
+// recharts' ResponsiveContainer needs a size: report __roWidth x 240 (default 600) for every observed element.
+globalThis.__roWidth = 600;
 globalThis.ResizeObserver = class {
   constructor(cb) { this.cb = cb; }
   observe(el) {
-    this.cb([{ target: el, contentRect: { width: 600, height: 240 }, borderBoxSize: [{ inlineSize: 600, blockSize: 240 }], contentBoxSize: [{ inlineSize: 600, blockSize: 240 }] }], this);
+    this.cb([{ target: el, contentRect: { width: globalThis.__roWidth, height: 240 }, borderBoxSize: [{ inlineSize: globalThis.__roWidth, blockSize: 240 }], contentBoxSize: [{ inlineSize: globalThis.__roWidth, blockSize: 240 }] }], this);
   }
   unobserve() {}
   disconnect() {}
@@ -53,6 +54,7 @@ function setValue(el, value) {
   Object.getOwnPropertyDescriptor(proto, "value").set.call(el, value);
   el.dispatchEvent(new window.Event(el instanceof window.HTMLSelectElement ? "change" : "input", { bubbles: true }));
 }
+const blur = (el) => el.dispatchEvent(new window.FocusEvent("focusout", { bubbles: true }));
 const submit = (form) => form.dispatchEvent(new window.Event("submit", { bubbles: true, cancelable: true }));
 
 let app;
@@ -104,6 +106,87 @@ describe("today card", () => {
     assert.equal(text('[data-testid="today-meals-count"]'), "0 meals");
     assert.equal(text('[data-testid="today-weight"]'), "No weight yet");
     assert.equal(q('[data-testid="today-meals"]'), null);
+  });
+});
+
+describe("daily target input", () => {
+  after(unmount);
+  const target = () => q('[aria-label="Daily target kcal"]');
+  const alertText = () => q('[role="alert"]')?.textContent ?? null;
+  async function mountCard(onGoal) {
+    await mount(React.createElement(app.TodayCard, { day: "2026-10-20", card: null, meals: [], goals: { kcal: 2000 }, onGoal }));
+  }
+  async function commit(value) {
+    await act(async () => setValue(target(), value));
+    await act(async () => blur(target()));
+  }
+
+  test("an invalid target shows an alert, keeps the previous value and stores nothing", async () => {
+    const calls = [];
+    await mountCard(async (n) => { calls.push(n); return { ok: true }; });
+    for (const bad of ["abc", "", "0", "499", "10001", "2300.5", "1e3", "-2000", "2 000"]) {
+      await commit(bad);
+      assert.equal(alertText(), app.GOAL_MESSAGE, `no alert for ${JSON.stringify(bad)}`);
+      assert.equal(target().value, "2000", `value not restored after ${JSON.stringify(bad)}`);
+      assert.equal(target().getAttribute("aria-invalid"), "true");
+    }
+    assert.deepEqual(calls, []);
+  });
+
+  test("a valid target is saved, clears the alert, and typing clears a stale alert", async () => {
+    const calls = [];
+    await mountCard(async (n) => { calls.push(n); return { ok: true }; });
+    await commit("abc");
+    assert.ok(alertText());
+    await act(async () => setValue(target(), "2"));
+    assert.equal(alertText(), null, "typing clears the alert");
+    await commit("2300");
+    assert.deepEqual(calls, [2300]);
+    assert.equal(alertText(), null);
+  });
+
+  test("a failed save shows its message and keeps the previous value", async () => {
+    await mountCard(async () => ({ ok: false, error: { code: "TIMEOUT", message: "No answer within 30000 ms." } }));
+    await commit("2300");
+    assert.equal(alertText(), "No answer within 30000 ms.");
+    assert.equal(target().value, "2000");
+  });
+
+  test("an unchanged target is not saved and shows no alert", async () => {
+    const calls = [];
+    await mountCard(async (n) => { calls.push(n); return { ok: true }; });
+    await commit("2000");
+    assert.deepEqual(calls, []);
+    assert.equal(alertText(), null);
+  });
+
+  test("a target of 0 coming from storage cannot produce a NaN progress bar", async () => {
+    await mount(React.createElement(app.TodayCard, { day: "d", card: { kcal: 500, meals: 1 }, meals: [], goals: { kcal: 0 } }));
+    assert.equal(q('[data-testid="today-progress"]').style.width, "0%");
+  });
+});
+
+describe("week chart", () => {
+  after(async () => {
+    globalThis.__roWidth = 600;
+    await unmount();
+  });
+  const days = ["2026-10-14", "2026-10-15", "2026-10-16", "2026-10-17", "2026-10-18", "2026-10-19", "2026-10-20"];
+  const makeRows = () => days.map((day, i) => ({
+    day, label: app.weekdayLabel(day), kcal: i === 3 ? 0 : 1000 + i * 100, meals: i === 3 ? 0 : 2, protein_g: 0, carbs_g: 0, fat_g: 0, weight_kg: i === 3 ? null : 82 - i * 0.2,
+  }));
+
+  test("the chart draws all seven weekday labels, a legend names both series, and an accessible summary lists every day (label dropping at 390 px needs real layout: checked in a browser, see README)", async () => {
+    globalThis.__roWidth = 324; // the chart's width inside a 390 px viewport
+    await mount(React.createElement(app.WeekChart, { rows: makeRows() }));
+    await waitFor(() => [...document.querySelectorAll("svg text")].some((t) => t.textContent === "Wed"), { what: "x axis labels" });
+    const labels = [...document.querySelectorAll("svg text")].map((e) => e.textContent).filter((t) => /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun)$/.test(t));
+    assert.deepEqual(labels, ["Wed", "Thu", "Fri", "Sat", "Sun", "Mon", "Tue"]);
+    assert.match(text('[data-testid="week-legend"]'), /Calories \(bars, left axis, kcal\)/);
+    assert.match(text('[data-testid="week-legend"]'), /Weight \(line, right axis, kg\)/);
+    const label = q('[data-testid="week-chart-plot"]').getAttribute("aria-label");
+    for (const d of ["Wed: 1,000 kcal", "Sat: no meals", "Tue: 1,600 kcal, 80.8 kg"]) assert.ok(label.includes(d), `${d} missing from: ${label}`);
+    assert.equal(label.split("; ").length, 7);
   });
 });
 

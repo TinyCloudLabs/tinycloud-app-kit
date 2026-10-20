@@ -52,8 +52,8 @@ Space `applications`, app prefix `xyz.tinycloud.sample.healthlog`. Each resource
 | Resource | Actions | Why |
 | --- | --- | --- |
 | `tinycloud.sql:applications:xyz.tinycloud.sample.healthlog/healthlog` | read, write, schema | Read and change your meal and weight log (database xyz.tinycloud.sample.healthlog/healthlog). schema lets the app create its own tables on first open. |
-| `tinycloud.kv:applications:xyz.tinycloud.sample.healthlog/prefs/` | get, put, del, list | Read and change the app's settings (daily targets, units). |
-| `tinycloud.kv:applications:xyz.tinycloud.sample.healthlog/app/` | get, list | Read the installed copy of the app (code, schema). The app cannot change its own code. |
+| `tinycloud.kv:applications:xyz.tinycloud.sample.healthlog/prefs/` | get, put | Read and change the app's settings (daily calorie target). |
+| `tinycloud.kv:applications:xyz.tinycloud.sample.healthlog/app/` | get | Read the installed copy of the app (schema). The app cannot change its own code. |
 | `tinycloud.kv:applications:xyz.tinycloud.sample.healthlog/knowledge/` | get, put, list | Read and update the app's knowledge bundle so an agent can pick up where you left off. |
 
 # Getting access

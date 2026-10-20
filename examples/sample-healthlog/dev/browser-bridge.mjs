@@ -8,7 +8,9 @@ const b64 = {
 async function call(op, args) {
   const wire = { ...args };
   if (wire.body instanceof Uint8Array) wire.body = { b64: b64.enc(wire.body) };
-  const res = await fetch("/bridge", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ op, args: wire }) });
+  const token = document.querySelector('meta[name="bridge-token"]')?.content ?? "";
+  const res = await fetch("/bridge", { method: "POST", headers: { "content-type": "application/json", "x-bridge-token": token }, body: JSON.stringify({ op, args: wire }) });
+  if (!res.ok) return { ok: false, error: { code: "INTERNAL", message: `dev server answered ${res.status}` } };
   const out = await res.json();
   if (out.ok && out.bytesB64 !== undefined) {
     out.bytes = b64.dec(out.bytesB64);

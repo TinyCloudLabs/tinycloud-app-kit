@@ -1,7 +1,7 @@
 ---
 type: "KV Prefix"
 title: app/
-description: "Read the installed copy of the app (code, schema)."
+description: "Read the installed copy of the app (schema)."
 resource: tinycloud.kv:applications:xyz.tinycloud.sample.healthlog/app/
 generated: { by: tinycloud-app-kit/okf }
 tinycloud:
@@ -11,7 +11,7 @@ tinycloud:
   containsSecretValue: false
 ---
 
-Read the installed copy of the app (code, schema). The app cannot change its own code.
+Read the installed copy of the app (schema). The app cannot change its own code.
 
 # Keys
 
@@ -19,7 +19,7 @@ Every key beginning with `xyz.tinycloud.sample.healthlog/app/` in space `applica
 
 # Access
 
-The manifest grants `get`, `list`. This app only reads here: do not write to it.
+The manifest grants `get`. This app only reads here: do not write to it.
 
 <!-- keep -->
 | Key | Description |

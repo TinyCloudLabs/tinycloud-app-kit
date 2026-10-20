@@ -2,7 +2,7 @@
 //   node dev/serve.mjs [--port 5173] [--seed]
 // The browser only talks to this server's /bridge endpoint; the server holds the session.
 import { build } from "esbuild";
-import { randomBytes } from "node:crypto";
+import { randomBytes, timingSafeEqual } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { createServer } from "node:http";
 import { dirname, join, resolve } from "node:path";
@@ -54,17 +54,43 @@ const bundle = await build({
 });
 const appJs = bundle.outputFiles[0].text;
 const tailwind = readFileSync(join(ROOT, "node_modules/@tailwindcss/browser/dist/index.global.js"));
-const html = `<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Health Log (sample)</title><script src="/tailwind.js"></script></head><body class="bg-neutral-50 dark:bg-neutral-950"><div id="root"></div><script src="/app.js"></script></body></html>`;
+// The /bridge endpoint drives a node session, so it is not open to arbitrary web pages: it is bound to
+// 127.0.0.1, answers only for this server's own Host/Origin, and needs a per-run random token that only
+// the served page can read (same-origin; no CORS headers are ever sent).
+const token = randomBytes(24).toString("hex");
+const html = `<!doctype html><html><head><meta charset="utf-8"><meta name="bridge-token" content="${token}"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Health Log (sample)</title><script src="/tailwind.js"></script></head><body class="bg-neutral-50 dark:bg-neutral-950"><div id="root"></div><script src="/app.js"></script></body></html>`;
+
+const ownHosts = new Set([`127.0.0.1:${port}`, `localhost:${port}`]);
+const tokenOk = (given) => {
+  const a = Buffer.from(String(given ?? ""));
+  const b = Buffer.from(token);
+  return a.length === b.length && timingSafeEqual(a, b);
+};
+const MAX_BODY = 2_000_000;
 
 const server = createServer(async (req, res) => {
-  const send = (code, type, body) => { res.writeHead(code, { "content-type": type }); res.end(body); };
+  const send = (code, type, body) => { res.writeHead(code, { "content-type": type, "cache-control": "no-store" }); res.end(body); };
+  if (!ownHosts.has(req.headers.host ?? "")) return send(403, "text/plain", "forbidden host"); // DNS rebinding
   if (req.method === "GET" && req.url === "/") return send(200, "text/html", html);
   if (req.method === "GET" && req.url === "/app.js") return send(200, "text/javascript", appJs);
   if (req.method === "GET" && req.url === "/tailwind.js") return send(200, "text/javascript", tailwind);
   if (req.method === "POST" && req.url === "/bridge") {
+    const origin = req.headers.origin;
+    if (origin !== undefined && ![...ownHosts].some((h) => origin === `http://${h}`)) return send(403, "text/plain", "forbidden origin");
+    if (!tokenOk(req.headers["x-bridge-token"])) return send(403, "text/plain", "bad token");
+    if (!String(req.headers["content-type"] ?? "").startsWith("application/json")) return send(415, "text/plain", "json only");
     let raw = "";
-    for await (const chunk of req) raw += chunk;
-    const { op, args: a } = JSON.parse(raw);
+    for await (const chunk of req) {
+      raw += chunk;
+      if (raw.length > MAX_BODY) return send(413, "text/plain", "too large");
+    }
+    let op, a;
+    try {
+      ({ op, args: a } = JSON.parse(raw));
+      if (typeof op !== "string" || a === null || typeof a !== "object") throw new Error("shape");
+    } catch {
+      return send(400, "text/plain", "bad request");
+    }
     const [svc, fn] = op.split(".");
     let out;
     if (svc === "kv" && fn === "get") out = await bridge.kv.get(a.key);

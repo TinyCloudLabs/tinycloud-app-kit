@@ -144,8 +144,28 @@ describe("settings in KV (prefs/)", { skip: SKIP }, () => {
     assert.deepEqual(await app.loadGoals(), { kcal: 2000 });
     assert.equal((await app.saveGoals({ kcal: 2300 })).ok, true);
     assert.deepEqual(await app.loadGoals(), { kcal: 2300 });
-    assert.equal((await app.saveGoals({ kcal: 3 })).ok, false);
-    assert.deepEqual((await kv.list("prefs/")).keys, ["prefs/goals.json"]);
+    for (const bad of [3, 20000, 2300.5, "2300", NaN, null, undefined]) {
+      const r = await app.saveGoals({ kcal: bad });
+      assert.equal(r.ok, false, String(bad));
+      assert.equal(r.error.message, app.GOAL_MESSAGE);
+    }
+    // the invalid saves left the stored value alone
+    const raw = await stack.bridge.node.kv.get(`${manifest.app_id}/prefs/goals.json`, { raw: true });
+    assert.equal(raw.data.data, '{"kcal":2300}');
+  });
+
+  test("a stored target that is not usable (0, text, broken JSON) falls back to the default", async () => {
+    const node = stack.bridge.node;
+    for (const stored of ['{"kcal":0}', '{"kcal":"lots"}', '{"kcal":-5}', "not json"]) {
+      await node.kv.put(`${manifest.app_id}/prefs/goals.json`, stored, { contentType: "application/json" });
+      assert.deepEqual(await app.loadGoals(), { kcal: 2000 }, stored);
+    }
+  });
+
+  test("kv.put with null options is treated as {} and works", async () => {
+    assert.equal((await kv.put("prefs/null-opts", "1", null)).ok, true);
+    assert.equal(new TextDecoder().decode((await kv.get("prefs/null-opts")).bytes), "1");
+    assert.equal((await kv.put("prefs/null-opts", "2", { ifNoneMatch: true })).error.code, "PRECONDITION_FAILED");
   });
 });
 
