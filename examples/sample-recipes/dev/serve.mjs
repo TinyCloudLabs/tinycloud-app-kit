@@ -1,5 +1,6 @@
 // Local dev server: a throwaway native node + the shim, with the app in a real browser.
-//   node dev/serve.mjs [--port 5174] [--seed]
+//   node dev/serve.mjs [--port 5174] [--seed] [--long]
+//   --long adds one recipe with very long unbroken text, to look at wrapping.
 // Stands up both apps for one owner: the Health Log sample (its data is read across apps) and
 // this one. The browser only talks to this server's /bridge endpoint; the server holds the
 // manifest-scoped sessions, so the page never sees a key.
@@ -8,6 +9,7 @@ import { build } from "esbuild";
 import { randomBytes, timingSafeEqual } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { createServer } from "node:http";
+import { createServer as createNetServer } from "node:net";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { loadApp, SHARED } from "./build.mjs";
@@ -17,8 +19,37 @@ const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const args = process.argv.slice(2);
 const port = Number(args[args.indexOf("--port") + 1]) || 5174;
 const seed = args.includes("--seed");
+const long = args.includes("--long");
+
+// Nothing is started if the port is taken, and the node child started below is stopped (by its own handle,
+// never by pattern) on every way out: SIGINT/SIGTERM/SIGHUP, a failure while seeding or building, a server error.
+await new Promise((resolve, reject) => {
+  const probe = createNetServer();
+  probe.once("error", reject);
+  probe.listen(port, "127.0.0.1", () => probe.close(resolve));
+}).catch((e) => {
+  console.error(`port ${port} is not available (${e.code ?? e.message}); nothing was started`);
+  process.exit(1);
+});
 
 const stack = await freshStack();
+let server;
+let stopping = false;
+async function stop(code = 0) {
+  if (stopping) return;
+  stopping = true;
+  try {
+    server?.close();
+    await stack.stop();
+  } finally {
+    process.exit(code);
+  }
+}
+for (const sig of ["SIGINT", "SIGTERM", "SIGHUP"]) process.on(sig, () => stop(0));
+process.on("uncaughtException", (e) => (console.error(e), stop(1)));
+process.on("unhandledRejection", (e) => (console.error(e), stop(1)));
+
+try {
 await stack.install();
 const bridge = stack.recipes;
 
@@ -84,6 +115,13 @@ if (seed) {
     }),
     shelfIds: [breakfasts], links: [link("Oats with berries")],
   });
+  if (long) {
+    await app.createShelf("H".repeat(80));
+    await app.saveRecipe({
+      fields: make({ title: "T".repeat(190), summary: "S".repeat(300), ingredients: [{ qty: "Q".repeat(60), item: "I".repeat(120) }], steps: "P".repeat(400), kcal: "100", nutrition_basis: "estimate" }),
+      shelfIds: [dinners], links: [],
+    });
+  }
   await app.saveRecipe({ fields: make({ title: "Plain pancakes", origin: "adapted", summary: "Fluffy, from a friend's recipe, with less sugar.", servings: "2" }), shelfIds: [breakfasts], links: [] });
 }
 
@@ -117,7 +155,7 @@ const tokenOk = (given) => {
 };
 const MAX_BODY = 2_000_000;
 
-const server = createServer(async (req, res) => {
+server = createServer(async (req, res) => {
   const send = (code, type, body) => { res.writeHead(code, { "content-type": type, "cache-control": "no-store" }); res.end(body); };
   if (!ownHosts.has(req.headers.host ?? "")) return send(403, "text/plain", "forbidden host"); // DNS rebinding
   const path = (req.url ?? "").split("?")[0];
@@ -155,12 +193,12 @@ const server = createServer(async (req, res) => {
   }
   return send(404, "text/plain", "not found");
 });
+server.once("error", (e) => {
+  console.error(`cannot serve on 127.0.0.1:${port}: ${e.code ?? e.message}`);
+  stop(1);
+});
 server.listen(port, "127.0.0.1", () => console.log(`recipes dev server: http://127.0.0.1:${port}/`));
-
-async function shutdown() {
-  server.close();
-  await stack.stop();
-  process.exit(0);
+} catch (e) {
+  console.error(e);
+  await stop(1);
 }
-process.on("SIGINT", shutdown);
-process.on("SIGTERM", shutdown);

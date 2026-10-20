@@ -54,7 +54,7 @@
         "read"
       ],
       "skipPrefix": true,
-      "description": "Read your Health Log meals so you can start a recipe from one. Read only: this app cannot change your Health Log."
+      "description": "Read access to the whole Health Log database (xyz.tinycloud.sample.healthlog/healthlog): its meals, its body-weight entries and its daily summaries. This app only reads meals, so you can start a recipe from one. Read only: it cannot change anything in your Health Log."
     }
   ]
 }

@@ -32,7 +32,7 @@ export async function startNode() {
   if (reason) throw new Error(reason);
   const bin = process.env.TC_NODE_BIN;
   const port = await freePort();
-  const dir = mkdtempSync(join(tmpdir(), "t2b-node-"));
+  const dir = mkdtempSync(join(tmpdir(), "sample-recipes-node-"));
   // Minimal config: static root key (from env), local blocks, file staging.
   writeFileSync(join(dir, "tinycloud.toml"), [
     "[global]", 'log_level = "normal"', "cors = true", "",

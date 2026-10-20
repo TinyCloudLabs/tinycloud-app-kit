@@ -41,9 +41,19 @@ async function appSession({ host, privateKey, manifest }) {
   return node;
 }
 
+/** Starts a node and builds the stack on it; if anything fails half way, the node started here is stopped. */
 export async function freshStack() {
   const { connect } = await loadShim();
   const node = await startNode();
+  try {
+    return await buildStack(node, connect);
+  } catch (e) {
+    await node.stop();
+    throw e;
+  }
+}
+
+async function buildStack(node, connect) {
   const privateKey = randomBytes(32).toString("hex");
 
   // The owner: full authority, used only to play the installer and to seed things

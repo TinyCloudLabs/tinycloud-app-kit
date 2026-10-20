@@ -205,6 +205,27 @@ describe("recipes app logic on a local node", { skip }, () => {
       bad({ protein_g: "-1", nutrition_basis: "estimate" }, /Protein/);
       bad({ prep_min: "ten" }, /Prep/);
       bad({ kcal: "300" }, /where the nutrition numbers come from/);
+      bad({ servings: "1001" }, /Servings must be a number from 0 to 1000/);
+      bad({ servings: "9".repeat(25) }, /Servings/);
+      bad({ prep_min: "10081" }, /Prep minutes must be a whole number from 0 to 10080/);
+      bad({ cook_min: "1e3" }, /Cook minutes/);
+      bad({ protein_g: "10001", nutrition_basis: "estimate" }, /Protein must be a number from 0 to 10000/);
+      bad({ carbs_g: "9".repeat(25), nutrition_basis: "estimate" }, /Carbs/);
+      bad({ fat_g: "0x10", nutrition_basis: "estimate" }, /Fat/);
+      bad({ summary: "x".repeat(1001) }, /summary is limited to 1000/);
+      bad({ steps: "x".repeat(20001) }, /steps are limited to 20000/);
+    });
+
+    test("the bounds themselves are accepted, and the node enforces the same bounds if the app is bypassed", async () => {
+      const f = valid(fill({ servings: "1000", prep_min: "10080", cook_min: "0", kcal: "5000", protein_g: "10000", carbs_g: "0.5", fat_g: ".5", nutrition_basis: "label" }));
+      assert.equal(f.servings, 1000);
+      assert.equal(f.fat_g, 0.5);
+      for (const [column, value] of [["servings", 1001], ["prep_min", 10081], ["cook_min", -1], ["protein_g", 10001], ["carbs_g", 10001], ["fat_g", -0.1]]) {
+        const r = await stack.recipes.sql.execute("recipes", `INSERT INTO recipe (id, title, ${column}, created_at, updated_at) VALUES ('b', 'b', ?, 'now', 'now')`, [value]);
+        assert.equal(r.ok, false, `${column}=${value} was accepted by the node`);
+      }
+      const long = await stack.recipes.sql.execute("recipes", "INSERT INTO recipe (id, title, summary, created_at, updated_at) VALUES ('b', 'b', ?, 'now', 'now')", ["x".repeat(1001)]);
+      assert.equal(long.ok, false);
     });
 
     test("blank optional numbers become NULL and blank ingredient rows are dropped", () => {

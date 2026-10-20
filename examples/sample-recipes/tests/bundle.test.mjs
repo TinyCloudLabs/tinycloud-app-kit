@@ -119,7 +119,7 @@ describe("knowledge bundle (in-repo coverage; okf.mjs is the full check)", () =>
   });
 
   test("regenerating knowledge/ from manifest, schema and knowledge-src changes nothing (no drift)", { skip: !okfAvailable && noKit }, () => {
-    const tmp = mkdtempSync(join(tmpdir(), "t3b-knowledge-"));
+    const tmp = mkdtempSync(join(tmpdir(), "sample-recipes-knowledge-"));
     try {
       cpSync(join(ROOT, "knowledge"), join(tmp, "knowledge"), { recursive: true });
       const r = okf([...GENERATE_ARGS.slice(0, -1), join(tmp, "knowledge"), "--date", "2026-10-20"]);

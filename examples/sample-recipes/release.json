@@ -5,13 +5,13 @@
   "files": [
     {
       "path": "app.jsx",
-      "sha256": "08d4b9204e8265e4635265be5c06074133714b64520895a0de0c6059f330f1e8",
-      "size": 42684
+      "sha256": "0a6710e947a0e79f307ee4476e788a34b54f448f1bd02f8a60956cddb3390b29",
+      "size": 43389
     },
     {
       "path": "knowledge/app.md",
-      "sha256": "930eff8b40d330e9b61240134340a7304220e9c961bc8cd47340b86c211b1dfb",
-      "size": 4742
+      "sha256": "1714aa7b56eaecd60622b026fe2e8038a419b88df9dbcf18350af8c87eab68e6",
+      "size": 5134
     },
     {
       "path": "knowledge/index.md",
@@ -35,8 +35,8 @@
     },
     {
       "path": "knowledge/log.md",
-      "sha256": "9584c1957ad017e7b9d341682c85015754a5e8f7227cec9303a8a4b597892482",
-      "size": 121
+      "sha256": "95dd7cc4665d109fc32319ba3ec4bf325f7d200b8978aa669a9c51aa92b025c9",
+      "size": 225
     },
     {
       "path": "knowledge/tables/meal_link.md",
@@ -45,8 +45,8 @@
     },
     {
       "path": "knowledge/tables/recipe.md",
-      "sha256": "8d14bbea8b44240ea325a0a6c04c52b6167f49515365aa2ae2a561205a038edf",
-      "size": 2416
+      "sha256": "3685b003582f0b2a3ab6a20ff44afe34e6b723a83b47d730a1eb0fef24ce0e0f",
+      "size": 2580
     },
     {
       "path": "knowledge/tables/recipe_shelf.md",
@@ -70,14 +70,14 @@
     },
     {
       "path": "manifest.json",
-      "sha256": "978a6f43bfd430594b9b6df38f05b3a48f03218a05531b6117bc0e51afdd9b79",
-      "size": 1788
+      "sha256": "6bc186bbf88e57c574dc52eeb895b36fc0cb1ba763fa94fc28ec52caa5766cb5",
+      "size": 1943
     },
     {
       "path": "schema.sql",
-      "sha256": "b0513964e738c2eb1416bf8e6fa83c676a47a5a997a8907da4d096c20a4d4de3",
-      "size": 5164
+      "sha256": "603c0b93a33c8cf2c392c346d892f97bc105eb49d9f0f8aaa83cf0fb51fe9944",
+      "size": 5314
     }
   ],
-  "digest": "dae2e2059061aca2ed042f5349e431ee2b9275515230670b8b53e4f0a2cfc625"
+  "digest": "d62ead4e0a222f656dece47f6c85880a841bcb722316121d701823fa4bd88296"
 }

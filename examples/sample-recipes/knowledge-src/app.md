@@ -6,7 +6,7 @@ description: A small recipe book. Shelves group recipes; a recipe can be started
 
 * One SQLite database, `xyz.tinycloud.sample.recipes/recipes`: `recipe`, `shelf`, `recipe_shelf` (which recipe is on which shelf) and `meal_link` (which Health Log meal a recipe was started from). The `recipe_card` and `shelf_overview` views are what the screens read.
 * Settings in KV under `prefs/`. The installed app (`app.jsx`, `manifest.json`, `schema.sql`) is under `app/`.
-* It reads the Health Log's `meal` table (`xyz.tinycloud.sample.healthlog/healthlog`). That is another app's data and this app has read access only.
+* It has read access to the whole Health Log database (`xyz.tinycloud.sample.healthlog/healthlog`): meals (`meal`), body weight (`weight`) and the daily summary views (`day_card`, `week_rollup`). SQL grants are per database, not per table, so all of that is readable. The app only queries `meal` and never touches the rest. That is another app's data and this app has read access only.
 
 # Working rules
 

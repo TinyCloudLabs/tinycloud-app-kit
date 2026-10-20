@@ -347,30 +347,40 @@ export function formFromMeal(meal) {
 // Plain decimal digits only: Number() would also accept "0x10", "1e3" and "Infinity".
 const PLAIN_NUMBER = /^(?:\d+\.?\d*|\.\d+)$/;
 
-function optionalNumber(text, label, { integer = false, min = 0, max = Infinity } = {}) {
+// Upper bounds, the same ones schema.sql enforces with CHECKs.
+export const MAX = { servings: 1000, minutes: 10080, kcal: 5000, grams: 10000, summary: 1000, steps: 20000 };
+
+function parseNumber(text, label, { integer = false, min = 0, max }) {
   const trimmed = text.trim();
-  if (trimmed === "") return { value: null };
   const n = PLAIN_NUMBER.test(trimmed) ? Number(trimmed) : NaN;
   if (!Number.isFinite(n) || n < min || n > max || (integer && !Number.isInteger(n))) {
-    return { error: `${label} must be ${integer ? "a whole number" : "a number"} between ${min} and ${max === Infinity ? "any value" : max}.` };
+    return { error: `${label} must be ${integer ? "a whole number" : "a number"} from ${min} to ${max}.` };
   }
   return { value: n };
+}
+
+function optionalNumber(text, label, opts) {
+  return text.trim() === "" ? { value: null } : parseNumber(text, label, opts);
 }
 
 export function validateForm(form) {
   const title = form.title.trim();
   if (!title) return { error: "Give the recipe a title." };
   if (title.length > 200) return { error: "The title is limited to 200 characters." };
-  const servings = PLAIN_NUMBER.test(form.servings.trim()) ? Number(form.servings.trim()) : NaN;
-  if (!Number.isFinite(servings) || servings <= 0) return { error: "Servings must be a number more than 0." };
+  if (form.summary.trim().length > MAX.summary) return { error: `The summary is limited to ${MAX.summary} characters.` };
+  if (form.steps.length > MAX.steps) return { error: `The steps are limited to ${MAX.steps} characters.` };
+  const servingsParsed = parseNumber(form.servings, "Servings", { min: 0, max: MAX.servings });
+  if (servingsParsed.error) return servingsParsed;
+  const servings = servingsParsed.value;
+  if (servings <= 0) return { error: `Servings must be a number more than 0 and at most ${MAX.servings}.` };
   const numbers = {};
   for (const [key, label, opts] of [
-    ["prep_min", "Prep minutes", { integer: true }],
-    ["cook_min", "Cook minutes", { integer: true }],
-    ["kcal", "Calories", { integer: true, max: 5000 }],
-    ["protein_g", "Protein", {}],
-    ["carbs_g", "Carbs", {}],
-    ["fat_g", "Fat", {}],
+    ["prep_min", "Prep minutes", { integer: true, max: MAX.minutes }],
+    ["cook_min", "Cook minutes", { integer: true, max: MAX.minutes }],
+    ["kcal", "Calories", { integer: true, max: MAX.kcal }],
+    ["protein_g", "Protein", { max: MAX.grams }],
+    ["carbs_g", "Carbs", { max: MAX.grams }],
+    ["fat_g", "Fat", { max: MAX.grams }],
   ]) {
     const parsed = optionalNumber(form[key], label, opts);
     if (parsed.error) return { error: parsed.error };
@@ -401,9 +411,9 @@ export function validateForm(form) {
 // -------------------------------------------------------------------- UI bits
 
 const btn = "rounded-md px-3 py-1.5 text-sm font-medium focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500";
-const btnPrimary = `${btn} bg-emerald-600 text-white hover:bg-emerald-700 disabled:opacity-50`;
-const btnPlain = `${btn} border border-stone-300 bg-white text-stone-800 hover:bg-stone-50 dark:border-stone-600 dark:bg-stone-900 dark:text-stone-200 dark:hover:bg-stone-800`;
-const btnDanger = `${btn} border border-red-300 bg-white text-red-700 hover:bg-red-50 dark:border-red-800 dark:bg-stone-900 dark:text-red-300 dark:hover:bg-red-950`;
+const btnPrimary = `${btn} whitespace-nowrap bg-emerald-600 text-white hover:bg-emerald-700 disabled:opacity-50`;
+const btnPlain = `${btn} whitespace-nowrap border border-stone-300 bg-white text-stone-800 hover:bg-stone-50 dark:border-stone-600 dark:bg-stone-900 dark:text-stone-200 dark:hover:bg-stone-800`;
+const btnDanger = `${btn} whitespace-nowrap border border-red-300 bg-white text-red-700 hover:bg-red-50 dark:border-red-800 dark:bg-stone-900 dark:text-red-300 dark:hover:bg-red-950`;
 const field = "w-full rounded-md border border-stone-300 bg-white px-2 py-1.5 text-sm text-stone-900 dark:border-stone-600 dark:bg-stone-900 dark:text-stone-100";
 
 function Macros({ recipe }) {
@@ -488,11 +498,11 @@ function RecipeList({ shelves, prefs, onPrefs, onOpen, onAdd, onFromMeal, onShel
           <span className="sr-only">Search recipes</span>
           <input className={`${field} w-56`} type="search" placeholder="Search titles" value={search} onChange={(e) => setSearch(e.target.value)} />
         </label>
-        <label className="flex items-center gap-1 text-sm">
+        <label className="flex items-center gap-1 whitespace-nowrap text-sm">
           <input type="checkbox" checked={favoritesOnly} onChange={(e) => setFavoritesOnly(e.target.checked)} />
           Favorites only
         </label>
-        <label className="flex items-center gap-1 text-sm">
+        <label className="flex items-center gap-1 whitespace-nowrap text-sm">
           Sort
           <select className={`${field} w-auto`} value={sort} onChange={(e) => onPrefs({ sort: e.target.value })}>
             <option value="updated">Recently changed</option>
@@ -883,7 +893,7 @@ function MealPicker({ onPick, onCancel }) {
                   {state.linked.has(m.id) ? " · already has a recipe" : ""}
                 </div>
               </div>
-              <button className={`${btnPlain} shrink-0 whitespace-nowrap`} aria-label={`Use ${m.name} on ${m.day}`} onClick={() => onPick(m)}>
+              <button className={`${btnPlain} shrink-0`} aria-label={`Use ${m.name} on ${m.day}`} onClick={() => onPick(m)}>
                 Use this meal
               </button>
             </li>
@@ -1071,7 +1081,7 @@ export default function App() {
   }
 
   return (
-    <main className="mx-auto max-w-3xl space-y-4 p-4 text-stone-900 dark:text-stone-100">
+    <main className="mx-auto max-w-3xl space-y-4 p-4 text-stone-900 [overflow-wrap:anywhere] dark:text-stone-100">
       <h1 className="text-3xl font-bold">Recipes</h1>
       {storageFull ? (
         <Banner>

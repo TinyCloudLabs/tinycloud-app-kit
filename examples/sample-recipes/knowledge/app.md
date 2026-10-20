@@ -12,7 +12,7 @@ A small recipe book: shelves, recipes, and recipes started from a meal in the He
 
 * One SQLite database, `xyz.tinycloud.sample.recipes/recipes`: `recipe`, `shelf`, `recipe_shelf` (which recipe is on which shelf) and `meal_link` (which Health Log meal a recipe was started from). The `recipe_card` and `shelf_overview` views are what the screens read.
 * Settings in KV under `prefs/`. The installed app (`app.jsx`, `manifest.json`, `schema.sql`) is under `app/`.
-* It reads the Health Log's `meal` table (`xyz.tinycloud.sample.healthlog/healthlog`). That is another app's data and this app has read access only.
+* It has read access to the whole Health Log database (`xyz.tinycloud.sample.healthlog/healthlog`): meals (`meal`), body weight (`weight`) and the daily summary views (`day_card`, `week_rollup`). SQL grants are per database, not per table, so all of that is readable. The app only queries `meal` and never touches the rest. That is another app's data and this app has read access only.
 
 # Working rules
 
@@ -42,7 +42,7 @@ Space `applications`, app prefix `xyz.tinycloud.sample.recipes`. Each resource b
 | `tinycloud.kv:applications:xyz.tinycloud.sample.recipes/prefs/` | get, put | Read and change the app's one settings file (sort order, last shelf). |
 | `tinycloud.kv:applications:xyz.tinycloud.sample.recipes/app/` | get | Read the installed copy of the app's schema. The app cannot change its own code. |
 | `tinycloud.kv:applications:xyz.tinycloud.sample.recipes/knowledge/` | get, put, list | Read and update the app's knowledge bundle so an agent can pick up where you left off. |
-| `tinycloud.sql:applications:xyz.tinycloud.sample.healthlog/healthlog` | read | Read your Health Log meals so you can start a recipe from one. Read only: this app cannot change your Health Log. |
+| `tinycloud.sql:applications:xyz.tinycloud.sample.healthlog/healthlog` | read | Read access to the whole Health Log database (xyz.tinycloud.sample.healthlog/healthlog): its meals, its body-weight entries and its daily summaries. This app only reads meals, so you can start a recipe from one. Read only: it cannot change anything in your Health Log. |
 
 # Other apps' data
 

@@ -213,7 +213,9 @@ describe("jsdom render on a local node", { skip }, () => {
       for (const [label, value, message] of [
         ["Calories", "1e3", /Calories must be a whole number/],
         ["Protein (g)", "0x10", /Protein must be a number/],
-        ["Servings", "two", /Servings must be a number more than 0/],
+        ["Servings", "two", /Servings must be a number from 0 to 1000/],
+        ["Servings", "1001", /Servings must be a number from 0 to 1000/],
+        ["Prep minutes", "10081", /Prep minutes must be a whole number from 0 to 10080/],
         ["Prep minutes", "-5", /Prep minutes must be a whole number/],
       ]) {
         const before = field(label).value;
@@ -229,6 +231,31 @@ describe("jsdom render on a local node", { skip }, () => {
       const after = await stack.recipes.sql.query("recipes", "SELECT COUNT(*) FROM recipe");
       assert.deepEqual(after.rows, before.rows, "nothing was written");
       await click(button("Cancel"));
+    });
+  });
+
+  describe("long unbroken text", () => {
+    test("user text can wrap anywhere: the root sets overflow-wrap and no text element opts out (checked in Chrome at 390 px by the dev-server pass)", async () => {
+      const fields = app.validateForm({ ...app.blankForm(), title: "T".repeat(190), summary: "S".repeat(300), ingredients: [{ qty: "Q".repeat(120), item: "I".repeat(120) }], steps: "P".repeat(500) }).fields;
+      const id = await app.saveRecipe({ fields, shelfIds: [], links: [] });
+      await click(button("Manage shelves")); // leave and come back so the list reloads
+      await waitFor(() => field("New shelf name"));
+      await click(button("Back to recipes"));
+      await waitFor(() => [...document.querySelectorAll("ul[aria-label='Recipe list'] button")].some((b) => b.textContent.includes("T".repeat(190))), { what: "long card" });
+      const main = document.querySelector("main");
+      assert.match(main.className, /\[overflow-wrap:anywhere\]/);
+      const optsOut = (el) => /\b(whitespace-nowrap|break-keep|truncate|overflow-visible)\b/.test(el.className);
+      for (const el of main.querySelectorAll("*")) {
+        if (el.children.length === 0 && /[A-Z]{100,}/.test(el.textContent)) {
+          for (let up = el; up && up !== main; up = up.parentElement) assert.equal(optsOut(up), false, `${up.tagName}.${up.className} stops long text from wrapping`);
+        }
+      }
+      await click([...document.querySelectorAll("ul[aria-label='Recipe list'] button")].find((b) => b.textContent.includes("T".repeat(190))));
+      await waitFor(() => document.querySelector(`article[aria-label='${"T".repeat(190)}']`), { what: "long detail" });
+      await click(button("Delete"));
+      await click(button("Yes, delete it"));
+      await waitFor(() => !/T{190}/.test(text()), { what: "long recipe gone" });
+      assert.ok(id);
     });
   });
 

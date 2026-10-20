@@ -12,6 +12,9 @@ const skip = sharedSkipReason();
 const manifest = JSON.parse(readFileSync(join(ROOT, "manifest.json"), "utf8"));
 const schema = readFileSync(join(ROOT, "schema.sql"), "utf8");
 
+/** Table or view names after FROM / JOIN, sorted and de-duplicated (enough for the plain SELECTs the app writes). */
+const tablesIn = (text) => [...new Set([...text.matchAll(/\b(?:FROM|JOIN)\s+([A-Za-z_]\w*)/gi)].map((m) => m[1].toLowerCase()))].sort();
+
 /** Stand-in for a node-sdk client: records every call, answers with empty successes. */
 function recorder() {
   const calls = [];
@@ -72,8 +75,14 @@ describe("the app's SQL against the shim's statement classes", { skip }, () => {
       assert.ok(sqlCalls.some((c) => /FROM shelf_overview/.test(c.text)), "the shelf_overview read ran");
       assert.ok(sqlCalls.some((c) => c.op === "sql.execute" && classifySql(c.text) === "schema"), "schema statements ran from the installed app/schema.sql");
       assert.ok(sqlCalls.some((c) => c.db.startsWith("xyz.tinycloud.sample.healthlog/") && /FROM meal/.test(c.text)), "the cross-app meal read ran");
-      // The only thing the app ever sends to the Health Log's database is reads.
-      assert.deepEqual([...new Set(sqlCalls.filter((c) => c.db.startsWith("xyz.tinycloud.sample.healthlog/")).map((c) => c.op))], ["sql.query"]);
+      // The only thing the app ever sends to the Health Log's database is reads...
+      const healthCalls = sqlCalls.filter((c) => c.db.startsWith("xyz.tinycloud.sample.healthlog/"));
+      assert.ok(healthCalls.length > 0);
+      assert.deepEqual([...new Set(healthCalls.map((c) => c.op))], ["sql.query"]);
+      // ...and they touch only `meal`, although the grant covers the whole database (meal, weight, day_card, week_rollup).
+      for (const c of healthCalls) assert.deepEqual(tablesIn(c.text), ["meal"], `a cross-app statement reads more than meal: ${c.text}`);
+      // The check itself works: it sees every table in joins and subqueries.
+      assert.deepEqual(tablesIn("SELECT * FROM meal m JOIN weight w ON w.day = m.day WHERE m.id IN (SELECT id FROM day_card)"), ["day_card", "meal", "weight"]);
     } finally {
       bridge.close();
     }
