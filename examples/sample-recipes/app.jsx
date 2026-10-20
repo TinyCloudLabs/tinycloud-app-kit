@@ -348,7 +348,9 @@ export function formFromMeal(meal) {
 const PLAIN_NUMBER = /^(?:\d+\.?\d*|\.\d+)$/;
 
 // Upper bounds, the same ones schema.sql enforces with CHECKs.
-export const MAX = { servings: 1000, minutes: 10080, kcal: 5000, grams: 10000, summary: 1000, steps: 20000 };
+// steps/ingredients limits keep the stored JSON well under the 100000-character CHECKs on steps_json and
+// ingredients_json (a character can grow to 6 in JSON, and every entry adds a few more).
+export const MAX = { servings: 1000, minutes: 10080, kcal: 5000, grams: 10000, summary: 1000, steps: 10000, ingredients: 50, qty: 60, item: 150 };
 
 function parseNumber(text, label, { integer = false, min = 0, max }) {
   const trimmed = text.trim();
@@ -369,10 +371,8 @@ export function validateForm(form) {
   if (title.length > 200) return { error: "The title is limited to 200 characters." };
   if (form.summary.trim().length > MAX.summary) return { error: `The summary is limited to ${MAX.summary} characters.` };
   if (form.steps.length > MAX.steps) return { error: `The steps are limited to ${MAX.steps} characters.` };
-  const servingsParsed = parseNumber(form.servings, "Servings", { min: 0, max: MAX.servings });
-  if (servingsParsed.error) return servingsParsed;
-  const servings = servingsParsed.value;
-  if (servings <= 0) return { error: `Servings must be a number more than 0 and at most ${MAX.servings}.` };
+  const servings = PLAIN_NUMBER.test(form.servings.trim()) ? Number(form.servings.trim()) : NaN;
+  if (!(servings > 0 && servings <= MAX.servings)) return { error: `Servings must be a number above 0, up to ${MAX.servings}.` };
   const numbers = {};
   for (const [key, label, opts] of [
     ["prep_min", "Prep minutes", { integer: true, max: MAX.minutes }],
@@ -388,6 +388,10 @@ export function validateForm(form) {
   }
   const hasNutrition = ["kcal", "protein_g", "carbs_g", "fat_g"].some((k) => numbers[k] !== null);
   if (hasNutrition && !form.nutrition_basis) return { error: "Say where the nutrition numbers come from." };
+  const ingredients = form.ingredients.map((i) => ({ qty: i.qty.trim(), item: i.item.trim() })).filter((i) => i.item || i.qty);
+  if (ingredients.length > MAX.ingredients) return { error: `A recipe can have at most ${MAX.ingredients} ingredients.` };
+  if (ingredients.some((i) => i.qty.length > MAX.qty)) return { error: `An ingredient amount is limited to ${MAX.qty} characters.` };
+  if (ingredients.some((i) => i.item.length > MAX.item)) return { error: `An ingredient name is limited to ${MAX.item} characters.` };
   return {
     fields: {
       title,
@@ -395,9 +399,7 @@ export function validateForm(form) {
       summary: form.summary.trim() || null,
       servings,
       ...numbers,
-      ingredients: form.ingredients
-        .map((i) => ({ qty: i.qty.trim(), item: i.item.trim() }))
-        .filter((i) => i.item || i.qty),
+      ingredients,
       steps: form.steps
         .split("\n")
         .map((s) => s.trim())
@@ -535,7 +537,7 @@ function RecipeList({ shelves, prefs, onPrefs, onOpen, onAdd, onFromMeal, onShel
                 </p>
                 <p className="mt-1 text-xs text-stone-500 dark:text-stone-400">
                   {ORIGINS[r.origin] || r.origin}
-                  {r.shelf_count > 0 ? ` · on ${r.shelf_count} shelf${r.shelf_count === 1 ? "" : "s"}` : ""}
+                  {r.shelf_count > 0 ? ` · on ${r.shelf_count} ${r.shelf_count === 1 ? "shelf" : "shelves"}` : ""}
                   {r.meal_count > 0 ? ` · linked to ${r.meal_count} meal${r.meal_count === 1 ? "" : "s"}` : ""}
                 </p>
               </button>

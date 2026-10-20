@@ -213,8 +213,8 @@ describe("jsdom render on a local node", { skip }, () => {
       for (const [label, value, message] of [
         ["Calories", "1e3", /Calories must be a whole number/],
         ["Protein (g)", "0x10", /Protein must be a number/],
-        ["Servings", "two", /Servings must be a number from 0 to 1000/],
-        ["Servings", "1001", /Servings must be a number from 0 to 1000/],
+        ["Servings", "two", /Servings must be a number above 0, up to 1000/],
+        ["Servings", "1001", /Servings must be a number above 0, up to 1000/],
         ["Prep minutes", "10081", /Prep minutes must be a whole number from 0 to 10080/],
         ["Prep minutes", "-5", /Prep minutes must be a whole number/],
       ]) {
@@ -236,7 +236,7 @@ describe("jsdom render on a local node", { skip }, () => {
 
   describe("long unbroken text", () => {
     test("user text can wrap anywhere: the root sets overflow-wrap and no text element opts out (checked in Chrome at 390 px by the dev-server pass)", async () => {
-      const fields = app.validateForm({ ...app.blankForm(), title: "T".repeat(190), summary: "S".repeat(300), ingredients: [{ qty: "Q".repeat(120), item: "I".repeat(120) }], steps: "P".repeat(500) }).fields;
+      const fields = app.validateForm({ ...app.blankForm(), title: "T".repeat(190), summary: "S".repeat(300), ingredients: [{ qty: "Q".repeat(60), item: "I".repeat(150) }], steps: "P".repeat(500) }).fields;
       const id = await app.saveRecipe({ fields, shelfIds: [], links: [] });
       await click(button("Manage shelves")); // leave and come back so the list reloads
       await waitFor(() => field("New shelf name"));
@@ -300,6 +300,29 @@ describe("jsdom render on a local node", { skip }, () => {
     test("the app never had more than 3 calls in flight through the whole run", () => {
       assert.ok(peak.max >= 1);
       assert.ok(peak.max <= 3, `peak in-flight calls was ${peak.max}`);
+    });
+  });
+
+  describe("plurals", () => {
+    test("a recipe on two shelves says 'on 2 shelves', and on one 'on 1 shelf'", async () => {
+      await app.createShelf("Plural A");
+      await app.createShelf("Plural B");
+      const [a, b] = (await app.listShelves()).filter((x) => x.name.startsWith("Plural")).map((x) => x.id);
+      const fields = app.validateForm({ ...app.blankForm(), title: "Plural check" }).fields;
+      const id = await app.saveRecipe({ fields, shelfIds: [a, b], links: [] });
+      await click(button("Manage shelves")); // leave and come back so the list reloads
+      await waitFor(() => field("New shelf name"));
+      await click(button("Back to recipes"));
+      const card = () => [...document.querySelectorAll("ul[aria-label='Recipe list'] > li")].find((li) => li.textContent.includes("Plural check"));
+      await waitFor(card, { what: "the recipe card" });
+      assert.match(card().textContent, /on 2 shelves/);
+      assert.doesNotMatch(card().textContent, /shelfs/);
+      await app.saveRecipe({ id, fields, shelfIds: [a], links: [] });
+      await click(button("Manage shelves"));
+      await waitFor(() => field("New shelf name"));
+      await click(button("Back to recipes"));
+      await waitFor(() => card() && /on 1 shelf\b(?!ves)/.test(card().textContent), { what: "singular" });
+      await app.deleteRecipe(id);
     });
   });
 });

@@ -68,7 +68,7 @@ part was saved.
 cd examples/sample-recipes
 npm run setup                                      # npm install here AND in ../sample-healthlog (it owns the shared bridge shim)
 npm test                                           # no node binary: the node-backed files SKIP with a message; the bundle checks still run
-TC_NODE_BIN=/path/to/tinycloud-node npm test       # a native tinycloud-node binary: runs everything (59 tests; without it 15 run and 3 suites skip)
+TC_NODE_BIN=/path/to/tinycloud-node npm test       # a native tinycloud-node binary: runs everything (64 tests; without it 15 run and 4 suites skip)
 npm run knowledge                                  # regenerate knowledge/ (keeps <!-- keep --> blocks), uses ../../scripts/okf.mjs
 npm run knowledge:check                            # okf.mjs check knowledge --manifest manifest.json
 npm run release                                    # rewrite release.json
@@ -92,8 +92,9 @@ sample's manifest and schema from `../sample-healthlog/`, so this example follow
   sends (the `recipe_card` / `shelf_overview` reads, the cross-app `meal` read, all writes) passes the shim's SQL
   class check in the right class, that every cross-app statement touches only `meal`, and that writes toward the Health Log never leave the shim.
 - `tests/recipes.test.mjs`: Health Log rows written through that app's own session, then a recipe created from a
-  meal id and read back; shelves, search, favorites, delete cascade; form validation including upper bounds (servings 1000, minutes 10080, calories 5000, macros 10000 g), with the same bounds enforced by the node.
+  meal id and read back; shelves, search, favorites, delete cascade; form validation including upper bounds (servings above 0 up to 1000, minutes 10080, calories 5000, macros 10000 g, summary 1000 characters, steps 10000 characters, 50 ingredients), and the node's own CHECKs on the same columns, tried directly (below, on and above each bound; `steps_json` and `ingredients_json` are capped at 100000 characters).
 - `tests/cross-app.test.mjs`: the read-allowed / write-refused proof above.
+- `tests/dev-server.test.mjs`: runs the real dev server and checks it leaves no node behind: SIGTERM while the node child is starting, and shortly after, stop that child (found by exact PID as a direct child) and remove its temp dir; a taken port exits 1 and starts nothing.
 - `tests/render.test.mjs`: jsdom render of the recipe list and the flows around it, against a real node; malformed or out-of-range numbers show an alert and write nothing; long unbroken text can wrap.
 
 ## Looking at it

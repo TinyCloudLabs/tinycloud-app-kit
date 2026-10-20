@@ -27,8 +27,8 @@ Table `recipe` in SQLite database `xyz.tinycloud.sample.recipes/recipes` (space 
 | `servings` | REAL | not null; default `1`; check `servings > 0 AND servings <= 1000` | - |
 | `prep_min` | INTEGER | check `prep_min IS NULL OR prep_min BETWEEN 0 AND 10080` | one week, in minutes |
 | `cook_min` | INTEGER | check `cook_min IS NULL OR cook_min BETWEEN 0 AND 10080` | - |
-| `ingredients_json` | TEXT | not null; default `'[]'` | JSON array of {"qty": "200 g", "item": "flour"}; qty is free text and may be empty |
-| `steps_json` | TEXT | not null; default `'[]'` | JSON array of strings, one per step, in order |
+| `ingredients_json` | TEXT | not null; default `'[]'`; check `length(ingredients_json) <= 100000` | JSON array of {"qty": "200 g", "item": "flour"}; qty is free text and may be empty |
+| `steps_json` | TEXT | not null; default `'[]'`; check `length(steps_json) <= 100000` | JSON array of strings, one per step, in order |
 | `kcal` | INTEGER | check `kcal IS NULL OR kcal BETWEEN 0 AND 5000` | per serving; NULL: not entered |
 | `protein_g` | REAL | check `protein_g IS NULL OR protein_g BETWEEN 0 AND 10000` | per serving |
 | `carbs_g` | REAL | check `carbs_g IS NULL OR carbs_g BETWEEN 0 AND 10000` | per serving |

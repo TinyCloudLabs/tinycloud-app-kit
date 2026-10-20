@@ -14,6 +14,7 @@ import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { loadApp, SHARED } from "./build.mjs";
 import { freshStack } from "../tests/lib/stack.mjs";
+import { stopAllNodes } from "../tests/lib/node.mjs";
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const args = process.argv.slice(2);
@@ -21,8 +22,26 @@ const port = Number(args[args.indexOf("--port") + 1]) || 5174;
 const seed = args.includes("--seed");
 const long = args.includes("--long");
 
-// Nothing is started if the port is taken, and the node child started below is stopped (by its own handle,
-// never by pattern) on every way out: SIGINT/SIGTERM/SIGHUP, a failure while seeding or building, a server error.
+// Cleanup first, then start anything: the handlers exist before the node child does, so a signal at any point
+// (including while the node is still starting) stops the child this process started, by handle, and removes its
+// temp dir. `stop` is idempotent.
+let server;
+let stopping = false;
+async function stop(code = 0) {
+  if (stopping) return;
+  stopping = true;
+  try {
+    server?.close();
+    await stopAllNodes();
+  } finally {
+    process.exit(code);
+  }
+}
+for (const sig of ["SIGINT", "SIGTERM", "SIGHUP"]) process.on(sig, () => stop(0));
+process.on("uncaughtException", (e) => (console.error(e), stop(1)));
+process.on("unhandledRejection", (e) => (console.error(e), stop(1)));
+
+// Nothing is started if the port is taken.
 await new Promise((resolve, reject) => {
   const probe = createNetServer();
   probe.once("error", reject);
@@ -33,22 +52,6 @@ await new Promise((resolve, reject) => {
 });
 
 const stack = await freshStack();
-let server;
-let stopping = false;
-async function stop(code = 0) {
-  if (stopping) return;
-  stopping = true;
-  try {
-    server?.close();
-    await stack.stop();
-  } finally {
-    process.exit(code);
-  }
-}
-for (const sig of ["SIGINT", "SIGTERM", "SIGHUP"]) process.on(sig, () => stop(0));
-process.on("uncaughtException", (e) => (console.error(e), stop(1)));
-process.on("unhandledRejection", (e) => (console.error(e), stop(1)));
-
 try {
 await stack.install();
 const bridge = stack.recipes;
