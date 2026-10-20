@@ -1,0 +1,22 @@
+{
+  "name": "recipes-sample",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Sample TinyCloud tiny app (app-type artifact): recipes, shelves, and recipes started from a Health Log meal",
+  "scripts": {
+    "test": "node --test --test-concurrency=1 tests/*.test.mjs",
+    "release": "node scripts/make-release.mjs",
+    "knowledge": "node scripts/knowledge.mjs generate",
+    "knowledge:check": "node scripts/knowledge.mjs check"
+  },
+  "dependencies": {
+    "@tinycloud/node-sdk": "3.2.5"
+  },
+  "devDependencies": {
+    "esbuild": "^0.25.0",
+    "jsdom": "^26.0.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
+  }
+}
