@@ -54,6 +54,7 @@ examples/
   minimal-app/
   sqlite-app/
   okf-fixtures/        invented larger app: tables, views, CHECK sets, grants
+  sample-healthlog/    complete tiny app: manifest, schema, app.jsx, OKF bundle, dev bridge shim, tests
 scripts/
   lint.mjs
   okf.mjs              OKF knowledge bundle generator and checker

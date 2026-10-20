@@ -19,6 +19,7 @@ function readJson(path) {
 
 function walk(dir, predicate, out = []) {
   for (const entry of readdirSync(dir)) {
+    if (entry === "node_modules" || entry === ".build") continue; // installed dependencies and build output are not kit files
     const path = join(dir, entry);
     const stat = statSync(path);
     if (stat.isDirectory()) {

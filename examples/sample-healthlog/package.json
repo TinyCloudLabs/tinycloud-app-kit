@@ -1,0 +1,25 @@
+{
+  "name": "healthlog-sample",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Sample TinyCloud tiny app (app-type artifact): meals + weight health log",
+  "scripts": {
+    "test": "node --test tests/*.test.mjs",
+    "release": "node scripts/make-release.mjs",
+    "knowledge": "node scripts/knowledge.mjs generate",
+    "knowledge:check": "node scripts/knowledge.mjs check",
+    "dev": "node dev/serve.mjs --seed"
+  },
+  "dependencies": {
+    "@tinycloud/node-sdk": "3.2.5"
+  },
+  "devDependencies": {
+    "@tailwindcss/browser": "^4.3.3",
+    "esbuild": "^0.25.0",
+    "jsdom": "^26.0.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "recharts": "^3.0.0"
+  }
+}
