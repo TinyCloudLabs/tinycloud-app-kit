@@ -2,7 +2,6 @@
   "schema": "tinycloud.app-release/v1",
   "app_id": "xyz.tinycloud.sample.healthlog",
   "version": "0.1.0",
-  "forked_from": null,
   "files": [
     {
       "path": "app.jsx",
@@ -11,8 +10,8 @@
     },
     {
       "path": "knowledge/app.md",
-      "sha256": "03d4b874c16006919a3cbb09256011ea7a3f83b932298ac6ef640110bdfc7689",
-      "size": 4106
+      "sha256": "5a8377ab22e200b1d72856cfecae7daedcefcc4b3c5f94d1ca493555a9a24266",
+      "size": 4087
     },
     {
       "path": "knowledge/index.md",
@@ -61,8 +60,8 @@
     },
     {
       "path": "manifest.json",
-      "sha256": "e02e102a3937d87c6344ddaef12c5efe3296fedf11383b158395002f7f3faf26",
-      "size": 1406
+      "sha256": "71237c66c4278f97961509ca422fc015c3c15143377a87396f32a2bc7ccd6019",
+      "size": 1511
     },
     {
       "path": "schema.sql",
@@ -70,5 +69,5 @@
       "size": 4114
     }
   ],
-  "digest": "0f08f5f878a92d7d367039cba384fc8c94ef08f8d94da2a58328c440b5ce6813"
+  "digest": "c0e43a259ca2b01047605bcf11a076d8b1762dbc38f7df52fe4d3e15aed05484"
 }

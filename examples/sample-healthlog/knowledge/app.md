@@ -11,8 +11,7 @@ A small health log: meals with macros, body weight, a today card and a last-7-da
 
 The user logs meals (slot, name, kcal, protein/carbs/fat) and body weight. The
 app shows a **today card** (from `day_card`) and a **last 7 days** chart (from `week_rollup`). It has no network
-access, no other storage and no side effects beyond the resources listed below. `forked_from` is `null`: original
-work, not a fork.
+access, no other storage and no side effects beyond the resources listed below. It is original work, not a fork.
 
 # How to operate it (rules for agents)
 
