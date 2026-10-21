@@ -1,7 +1,7 @@
 // Local dev server: a throwaway native node + the shim, with the app in a real browser.
 //   node dev/serve.mjs [--port 5174] [--seed] [--long]
 //   --long adds one recipe with very long unbroken text, to look at wrapping.
-// Stands up both apps for one owner: the Health Log sample (its data is read across apps) and
+// Stands up both apps for one owner: the Health Log (its data is read across apps) and
 // this one. The browser only talks to this server's /bridge endpoint; the server holds the
 // manifest-scoped sessions, so the page never sees a key.
 // Add ?theme=dark or ?theme=light to the URL to force a colour scheme (default: the browser's).
@@ -142,14 +142,14 @@ const bundle = await build({
 const appJs = bundle.outputFiles[0].text;
 const tailwind = readFileSync(join(ROOT, "node_modules/@tailwindcss/browser/dist/index.global.js"));
 const token = randomBytes(24).toString("hex");
-const html = `<!doctype html><html><head><meta charset="utf-8"><meta name="bridge-token" content="${token}"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Recipes (sample)</title>
+const html = `<!doctype html><html><head><meta charset="utf-8"><meta name="bridge-token" content="${token}"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Recipes</title>
 <script>{const t = new URLSearchParams(location.search).get("theme"); if (t === "dark" || (t !== "light" && matchMedia("(prefers-color-scheme: dark)").matches)) document.documentElement.classList.add("dark");}</script>
 <style type="text/tailwindcss">@custom-variant dark (&:where(.dark, .dark *));</style>
 <script src="/tailwind.js"></script></head><body class="bg-stone-50 dark:bg-stone-950"><div id="root"></div><script src="/app.js"></script></body></html>`;
 
 // The /bridge endpoint drives a node session, so it is not open to arbitrary web pages: it is bound to
 // 127.0.0.1, answers only for this server's own Host/Origin, and needs a per-run random token that only
-// the served page can read (same-origin; no CORS headers are ever sent). Same rules as the Health Log sample.
+// the served page can read (same-origin; no CORS headers are ever sent). Same rules as the Health Log.
 const ownHosts = new Set([`127.0.0.1:${port}`, `localhost:${port}`]);
 const tokenOk = (given) => {
   const a = Buffer.from(String(given ?? ""));

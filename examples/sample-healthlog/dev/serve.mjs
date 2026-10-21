@@ -58,7 +58,7 @@ const tailwind = readFileSync(join(ROOT, "node_modules/@tailwindcss/browser/dist
 // 127.0.0.1, answers only for this server's own Host/Origin, and needs a per-run random token that only
 // the served page can read (same-origin; no CORS headers are ever sent).
 const token = randomBytes(24).toString("hex");
-const html = `<!doctype html><html><head><meta charset="utf-8"><meta name="bridge-token" content="${token}"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Health Log (sample)</title><script src="/tailwind.js"></script></head><body class="bg-neutral-50 dark:bg-neutral-950"><div id="root"></div><script src="/app.js"></script></body></html>`;
+const html = `<!doctype html><html><head><meta charset="utf-8"><meta name="bridge-token" content="${token}"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Health Log</title><script src="/tailwind.js"></script></head><body class="bg-neutral-50 dark:bg-neutral-950"><div id="root"></div><script src="/app.js"></script></body></html>`;
 
 const ownHosts = new Set([`127.0.0.1:${port}`, `localhost:${port}`]);
 const tokenOk = (given) => {

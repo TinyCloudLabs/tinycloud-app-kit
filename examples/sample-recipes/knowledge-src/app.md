@@ -1,5 +1,5 @@
 ---
-description: A small recipe book. Shelves group recipes; a recipe can be started from a meal in the Health Log sample app.
+description: A small recipe book. Shelves group recipes; a recipe can be started from a meal in the Health Log app.
 ---
 
 # What it holds

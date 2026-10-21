@@ -1,5 +1,5 @@
 ---
-tags: [health, food, weight, sample]
+tags: [health, food, weight]
 ---
 
 The user logs meals (slot, name, kcal, protein/carbs/fat) and body weight. The
