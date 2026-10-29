@@ -169,6 +169,25 @@ describe("settings in KV (prefs/)", { skip: SKIP }, () => {
   });
 });
 
+describe("timezone in KV (settings/)", { skip: SKIP }, () => {
+  test("saveTimezone stores the IANA zone at settings/timezone; an unusable zone is refused and leaves it alone", async () => {
+    assert.equal((await app.saveTimezone("Pacific/Kiritimati")).ok, true);
+    const raw = await stack.bridge.node.kv.get(`${manifest.app_id}/settings/timezone`, { raw: true });
+    assert.equal(raw.data.data, "Pacific/Kiritimati");
+    assert.equal((await app.saveTimezone(null)).ok, false);
+    const again = await stack.bridge.node.kv.get(`${manifest.app_id}/settings/timezone`, { raw: true });
+    assert.equal(again.data.data, "Pacific/Kiritimati");
+  });
+
+  test("browserTimeZone reports the runtime's zone and saveTimezone defaults to it", async () => {
+    const zone = app.browserTimeZone();
+    assert.equal(zone, Intl.DateTimeFormat().resolvedOptions().timeZone);
+    assert.equal((await app.saveTimezone()).ok, true);
+    const raw = await stack.bridge.node.kv.get(`${manifest.app_id}/settings/timezone`, { raw: true });
+    assert.equal(raw.data.data, zone);
+  });
+});
+
 describe("the bridge enforces the app's own manifest", { skip: SKIP }, () => {
   const denied = (r) => {
     assert.equal(r.ok, false);

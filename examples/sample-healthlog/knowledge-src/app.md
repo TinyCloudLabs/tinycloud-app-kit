@@ -13,8 +13,8 @@ access, no other storage and no side effects beyond the resources listed below. 
    logical entry. Write with `INSERT ... ON CONFLICT(op_id) DO NOTHING`, then **read the row back** with
    `SELECT ... WHERE op_id = ?`. If the write times out, read back before retrying and reuse the same `op_id`.
    Never insert without an `op_id`.
-3. Agents set `source = 'agent'`. `day` is the user's local calendar date (`YYYY-MM-DD`), not the UTC date: ask
-   when unsure. `logged_at` is an ISO 8601 UTC instant.
+3. Agents set `source = 'agent'`. `day` is the user's local calendar date (`YYYY-MM-DD`), not the UTC date. The page
+   saves the user's IANA timezone at `settings/timezone` when it opens. `logged_at` is an ISO 8601 UTC instant.
 4. Write only `meal` and `weight`. `day_card` and `week_rollup` are views and update by themselves.
 5. Values: `slot` is one of `breakfast|lunch|dinner|snack`; `kcal` is a whole number 0 to 5000; macros are grams
    (>= 0); `weight_kg` is 20 to 500. The schema enforces these with CHECK constraints.
