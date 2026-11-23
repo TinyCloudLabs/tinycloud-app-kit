@@ -54,19 +54,23 @@ leaves that choice there. The session ends at its signed expiry unless the
 owner approved renewal and the node extends it. Renewal preserves the original
 permissions, so the manifest should request only the access the app uses.
 
-For ongoing access to ordinary KV or SQL data, OpenKey starts with renewal
-selected and suggests 90 days, or the request's own length if that is shorter.
+For ordinary KV or SQL data, OpenKey starts with renewal selected only when
+the signed request includes `purpose: "standing"`. OpenKey suggests 90 days,
+or the request's own length if that is shorter. If the request omits the
+purpose, OpenKey treats it as a task and leaves renewal unticked.
+
 For access to secrets or decryption, renewal starts off and the owner must
-confirm to turn it on. When the owner confirms sensitive access in OpenKey,
-each renewal window is at most seven days. The owner can stop renewal under
+confirm to turn it on. Marking a sensitive request as standing still leaves
+the box unticked and requires the same confirmation. When the owner confirms
+sensitive access in OpenKey, each renewal window is at most seven days. The owner can stop renewal under
 **Renewing permissions** in OpenKey Settings. Access then ends at its original
 signed expiry or immediately if that time has passed.
 
 Starting with `@tinycloud/web-sdk` 3.12, browser sign-in raises
 `AccountSetupRequiredError` when the owner has no account registry record and
-the app's origin is outside the SDK's first-party list. If your app needs to sign in
-owners who have no account record, ask the TinyCloud team to add its origin
-to that list.
+the app's origin is outside the SDK's first-party list.
+Catch the error and send the owner to `error.setupUrl` to finish setting up
+their account. Retry sign-in when the owner returns.
 
 ## Resource Declarations
 
