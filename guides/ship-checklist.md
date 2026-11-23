@@ -39,6 +39,7 @@ Implement the frontend, backend, and agent behavior your manifest declares.
 Working locally is sufficient to prove the app before deploying:
 
 - Sign in with [openkey.so](https://openkey.so).
+- OpenKey presents the only renewal choice, as described in [Sessions and renewal](author-a-manifest.md#sessions-and-renewal).
 - Grant the delegation the frontend requests.
 - Probe app data to confirm reads and writes go through delegated TinyCloud
   access.

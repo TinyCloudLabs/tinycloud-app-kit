@@ -32,6 +32,7 @@ Use this skill when creating or updating a TinyCloud app package.
    what was stored on a partial save, and stop bulk loops. Detect by code
    (typed code anywhere in the `cause` chain beats text), with a text fallback
    for older SDKs. See `guides/sql-schema-and-migrations.md` "Storage Full".
+10. Follow [Sessions and renewal](../../guides/author-a-manifest.md#sessions-and-renewal) for browser sign-in and renewal consent.
 
 ## Output Shape
 

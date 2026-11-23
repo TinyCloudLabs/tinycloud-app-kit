@@ -46,6 +46,32 @@ Only add explicit permissions or resources when the app needs:
 
 Use `defaults: false` when every permission should be explicit.
 
+## Sessions and renewal
+
+When browser sign-in requests renewal, the owner chooses whether to allow it
+during OpenKey approval. OpenKey supplies the checkbox and its text. The app
+leaves that choice there. The session ends at its signed expiry unless the
+owner approved renewal and the node extends it. Renewal preserves the original
+permissions, so the manifest should request only the access the app uses.
+
+For ordinary KV or SQL data, OpenKey starts with renewal selected only when
+the signed request includes `purpose: "standing"`. OpenKey suggests 90 days,
+or the request's own length if that is shorter. If the request omits the
+purpose, OpenKey treats it as a task and leaves renewal unticked.
+
+For access to secrets or decryption, renewal starts off and the owner must
+confirm to turn it on. A sensitive request marked as standing also starts
+with the box unticked and needs the same confirmation. When the owner confirms
+sensitive access in OpenKey, each renewal window is at most seven days. The owner can stop renewal under
+**Renewing permissions** in OpenKey Settings. Access then ends at its original
+signed expiry or immediately if that time has passed.
+
+Starting with `@tinycloud/web-sdk` 3.12, browser sign-in raises
+`AccountSetupRequiredError` when the owner has no account registry record and
+the app's origin is outside the SDK's first-party list.
+Catch the error and send the owner to `error.setupUrl` to finish setting up
+their account. Retry sign-in when the owner returns.
+
 ## Resource Declarations
 
 Use `resources` to describe the app's high-level data surfaces. These

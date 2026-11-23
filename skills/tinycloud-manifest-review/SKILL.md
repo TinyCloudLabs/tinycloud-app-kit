@@ -26,6 +26,7 @@ Prioritize:
   the app. `node scripts/okf.mjs check knowledge/ --manifest` passes.
 - Missing `defaults` is treated as `true`; explicit permissions do not duplicate
   default app-scoped KV/SQLite grants without a reason.
+- The app leaves renewal consent to OpenKey as described in [Sessions and renewal](../../guides/author-a-manifest.md#sessions-and-renewal).
 - Concepts exist only for resources in use.
 - Secrets in `app.md` list names, consumers, and rotation, not values.
 - Table and view concepts identify the database, columns, derived state, and
