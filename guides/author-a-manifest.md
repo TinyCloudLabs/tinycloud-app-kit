@@ -60,8 +60,8 @@ or the request's own length if that is shorter. If the request omits the
 purpose, OpenKey treats it as a task and leaves renewal unticked.
 
 For access to secrets or decryption, renewal starts off and the owner must
-confirm to turn it on. Marking a sensitive request as standing still leaves
-the box unticked and requires the same confirmation. When the owner confirms
+confirm to turn it on. A sensitive request marked as standing also starts
+with the box unticked and needs the same confirmation. When the owner confirms
 sensitive access in OpenKey, each renewal window is at most seven days. The owner can stop renewal under
 **Renewing permissions** in OpenKey Settings. Access then ends at its original
 signed expiry or immediately if that time has passed.
